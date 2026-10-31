@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { basename } from "node:path";
 import { createInterface } from "node:readline";
 
 export interface SpawnedProcess {
@@ -10,6 +11,9 @@ export interface SpawnedProcess {
 export type SpawnFn = (command: string, args: string[], opts: { cwd: string }) => SpawnedProcess;
 
 export const spawnReal: SpawnFn = (command, args, opts) => {
+  if (process.env.VITEST && ["claude", "codex"].includes(basename(command))) {
+    throw new Error(`Real provider processes are blocked under vitest (${basename(command)}); inject a spawn function instead.`);
+  }
   const child = spawn(command, args, { cwd: opts.cwd, detached: true, stdio: ["ignore", "pipe", "pipe"] });
   const reader = createInterface({ input: child.stdout, crlfDelay: Infinity });
   const lines = reader[Symbol.asyncIterator]();

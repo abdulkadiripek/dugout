@@ -56,3 +56,19 @@ it("escalates after two seconds even when a scripted process never exits", async
   await vi.advanceTimersByTimeAsync(1);
   expect(child.kills).toEqual(["SIGTERM", "SIGKILL"]);
 });
+it("blocks real claude and codex under vitest without spawning", () => {
+  expect(() => spawnReal("claude", [], { cwd })).toThrow(/blocked under vitest.*inject a spawn/);
+  expect(() => spawnReal("/usr/bin/codex", [], { cwd })).toThrow(/blocked under vitest.*inject a spawn/);
+});
+it("leaves other commands alone under vitest and outside it", async () => {
+  const saved = process.env.VITEST;
+  try {
+    const inside = spawnReal("sh", ["-c", "exit 0"], { cwd });
+    expect(await inside.exited).toEqual({ code: 0, signal: null });
+    delete process.env.VITEST;
+    const outside = spawnReal("sh", ["-c", "exit 3"], { cwd });
+    expect(await outside.exited).toEqual({ code: 3, signal: null });
+  } finally {
+    if (saved === undefined) delete process.env.VITEST; else process.env.VITEST = saved;
+  }
+});
