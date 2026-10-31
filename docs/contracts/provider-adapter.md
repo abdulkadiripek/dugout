@@ -81,3 +81,10 @@ Rule: a real adapter may only be written after one cheap approved call has been 
 - With `-m gpt-6-luna -s read-only` the model reported it could not read workspace files at all (no file-reading route), so it could not read `docs/plans/stage-1.md`. Cause unknown (sandbox on this Linux setup, or the model/tool configuration). Treat Codex-as-implementer in `read-only`/worktree as **unverified**; investigate with `-s workspace-write` in a throwaway worktree during Stage 3 before relying on it.
 - `AGENTS.md` was loaded automatically at startup (the model reproduced the rules before reading any file).
 - Exit code 0 on success. Limit and auth failure exit codes: unknown.
+
+### Observed: `codex exec --json -m gpt-6-astra -s workspace-write` in a worktree (sample: `fixtures/providers/codex/exec-json-tools.sample.jsonl`)
+- Observed 2026-10-31, one turn, in a throwaway worktree. The model read `AGENTS.md`, created a file and ran `pnpm typecheck` (exit 0). The `read-only` file-reading problem above did not occur with `workspace-write`; whether it comes from the sandbox mode or the model is still unknown.
+- Tool items: `item.started` / `item.completed` with `item.type: "command_execution"` (`command`, `aggregated_output`, `exit_code`, `status`) and `item.type: "file_change"` (`changes[]` of `path` + `kind`, absolute paths, `status`). Map to `provider.tool` events with relative paths and no output.
+- `-o <file>` wrote the last agent message to a file; the same text came as the final `item.completed` `agent_message`.
+- Stderr carried only "Reading additional input from stdin..." (harmless with stdin closed).
+- Sample is sanitized: thread id zeroed, `aggregated_output` omitted, paths made relative.
