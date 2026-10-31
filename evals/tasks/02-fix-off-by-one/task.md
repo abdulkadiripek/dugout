@@ -9,8 +9,10 @@ constraints:
   - Do not edit existing tests.
 acceptance:
   - All existing tests pass.
-  - paginate(items, page, size) never returns more than size items and never drops or repeats items across pages.
-verify: pnpm test
+  - paginate(items, page, size) uses 1-based pages, never returns more than size items and never drops or repeats items across pages.
+  - A page number past the last page returns an empty array, and the input array is not modified.
+verify: node --test
 max_retries: 1
 review: false
+providers: [codex, claude]
 ---
