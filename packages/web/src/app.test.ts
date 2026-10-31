@@ -100,7 +100,7 @@ describe("ListScreen", () => {
     links[0]?.blur();
     fireEvent.keyDown(document.body, { key: "Enter" });
     await waitFor(() => expect(window.location.hash).toBe("#/tasks/t-pass"));
-    await screen.findByText("Task detail");
+    await screen.findByText("Esc");
   });
 
   it("Escape goes back to the list and unknown hashes show not-found", async () => {
@@ -113,10 +113,11 @@ describe("ListScreen", () => {
     expect(await screen.findByText("Passing goal")).toBeTruthy();
   });
 
-  it("renders the detail placeholder for a task route", async () => {
+  it("renders the detail screen for a task route", async () => {
+    stubTasks([]);
     window.location.hash = "#/tasks/abc";
     render(h(App));
-    expect(screen.getByText("abc")).toBeTruthy();
+    expect(screen.getByRole("status").textContent).toContain("Loading task");
     await act(async () => {});
   });
 });
