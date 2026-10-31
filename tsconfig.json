@@ -1,9 +1,14 @@
 {
   "files": [],
   "references": [
-    { "path": "packages/core" },
-    { "path": "packages/cli" },
-    { "path": "packages/server" },
-    { "path": "packages/web" }
+    {
+      "path": "packages/core"
+    },
+    {
+      "path": "packages/cli"
+    },
+    {
+      "path": "packages/server"
+    }
   ]
 }
