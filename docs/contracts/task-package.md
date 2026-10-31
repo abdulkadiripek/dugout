@@ -13,6 +13,7 @@ A task package is a Markdown file: YAML frontmatter + optional free-form body.
 | `files_to_read` | string[] | yes (may be empty) | Repo-relative paths the implementer must read first. Keep it short; exact files beat directories. |
 | `constraints` | string[] | yes (may be empty) | Things that must not change or happen. |
 | `acceptance` | string[] | yes, at least 1 | Observable criteria. Each should map to a test. |
+| `setup` | string | no | Shell command run once in the worktree before the first attempt (for example installing dependencies). Exit 0 = ready; otherwise the task fails without any attempt. |
 | `verify` | string | yes | Shell command run in the worktree after each attempt. Exit 0 = pass. |
 | `max_retries` | integer 0-5 | no, default 2 | How many times a failed `verify` is fed back to the same provider. |
 | `review` | boolean | no, default true | Run cross-review after `verify` passes. |

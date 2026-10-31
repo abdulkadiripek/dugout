@@ -26,6 +26,7 @@ Type-specific fields are flat next to the envelope.
 | `provider.usage` | `attempt`, `inputTokens`, `outputTokens` (omit if the provider does not report them) |
 | `attempt.finished` | `attempt`, `status` (`completed` \| `failed`), `exitReason`, `durationMs` |
 | `fallback.triggered` | `from`, `to`, `reason` (`rate_limit` \| `auth` \| `crash`) |
+| `setup.finished` | `passed`, `exitCode`, `durationMs`, `outputTail` (optional: only when the package has a `setup` command; follows `worktree.created`) |
 | `verify.started` | `attempt`, `command` |
 | `verify.finished` | `attempt`, `passed`, `exitCode`, `durationMs`, `outputTail` (last ~30 lines) |
 | `review.started` | `provider`, `model` |
@@ -36,10 +37,10 @@ Type-specific fields are flat next to the envelope.
 
 ## Lifecycle rules
 
-- A log starts with `task.created` and ends with exactly one `task.finished`.
+- A log starts with `task.created` and ends with exactly one `task.finished`. If `setup.finished` has `passed: false`, the task ends `failed` with zero attempts and no `attempt.*` events.
 - `attempt.started` / `attempt.finished` always pair. A retry is a new attempt with the same provider (`reason: retry`); a fallback is a new attempt with a different provider (`reason: fallback`), preceded by `fallback.triggered`.
 - `verify.*` runs once after each attempt whose `exitReason` is `ok`.
-- `review.*` runs once, after the last passing `verify`, only if `package.review` is true.
+- `review.*` runs once, after the last passing `verify`, only if `package.review` is true. If the reviewer throws or returns invalid output, `runTask` still writes `review.finished` with verdict `changes_requested` and a single `blocker` issue `{ file: ".", message: "review unavailable: <reason>" }`; the task ends `needs_review`.
 - `task.finished.status`:
   - `passed`: `verify` passed and (review off, or verdict `approve`)
   - `needs_review`: `verify` passed but review verdict is `changes_requested`

@@ -66,8 +66,10 @@ A scenario is a list of per-attempt outcomes per provider slot, e.g. `[{exit:"ra
 | Provider | Invocation (planned) | Verified? |
 |---|---|---|
 | `fake` | in-process, scripted scenarios | n/a |
-| `claude` | `claude -p --model <m> --output-format json` (stream-json still untested) | **Partly.** One call observed 2026-10-31, see below. Limit behavior unknown. |
-| `codex` | `codex exec --json -m <m> -s read-only -C <cwd> "<prompt>" < /dev/null` | **Partly.** One call observed 2026-10-31, see below. Limit behavior unknown. |
+| `claude` (implement) | `claude -p "<prompt>" --model <m> --output-format stream-json --verbose --no-session-persistence --permission-mode acceptEdits --allowedTools Write Edit Read < /dev/null` | **Yes** (one call, 2026-10-31). Limit/auth failure shapes unknown. |
+| `claude` (review) | `claude -p "<prompt>" --model <m> --output-format json --json-schema '<schema>' --no-session-persistence --tools "" < /dev/null` | **Yes** (one call). |
+| `codex` (implement) | `codex exec --json -m <m> -s workspace-write -C <cwd> "<prompt>" < /dev/null` | **Yes** (several calls in a worktree). Limit/auth failure shapes unknown. |
+| `codex` (review) | `codex exec --json -m <m> -s read-only -C <cwd> --skip-git-repo-check --ephemeral --output-schema <file> -o <out> "<prompt>" < /dev/null` | **Yes** (one call). |
 
 Rule: a real adapter may only be written after one cheap approved call has been observed and a sanitized sample saved to `fixtures/providers/<provider>/`. Rate-limit detection stays "unknown" until a real limit is seen; until then it is implemented only for `fake`.
 
@@ -76,6 +78,21 @@ Rule: a real adapter may only be written after one cheap approved call has been 
 - A read-only question that read ~10 docs took 15 turns, ~22 s, and ~190k total input tokens (mostly cache). `total_cost_usd` is an API-price estimate, not subscription usage.
 - Tools not in `--allowedTools` are denied and listed in `permission_denials` (the run still succeeds); the adapter should treat denials as a signal, not an error.
 - `usage.input_tokens` is tiny because of caching; token accounting for events must sum input + cache read + cache creation.
+
+### Observed 2026-10-31: `claude -p` stream-json as implementer (sample: `fixtures/providers/claude/stream-json-implement.sample.jsonl`)
+- Prompt must come **before** the variadic flags (`--allowedTools`, `--tools`); otherwise the flag swallows it and the CLI exits 1 with "Input must be provided either through stdin or as a prompt argument". Close stdin.
+- Line-delimited JSON. Types seen: `system` (`init` with `model`, `cwd`, `permissionMode`; also `hook_started`/`hook_response` from the user's own hooks, and `thinking_tokens`), `assistant` (`message.content[]` items of type `thinking`, `tool_use` with `name` and `input`, or `text`), `user` (`tool_result`), `rate_limit_event`, and a final `result` (same shape as the `--output-format json` object: `subtype`, `is_error`, `num_turns`, `usage`, `permission_denials`, `total_cost_usd`). Exit code 0.
+- `rate_limit_event.rate_limit_info`: `status` (only `"allowed"` seen), `rateLimitType`, `resetsAt` (epoch seconds), `unifiedWindows.five_hour` / `seven_day` with `utilization` (0-1) and `status`. Values of `status` other than `allowed` are **unobserved**. `apiKeySource` is `none` in `init` (subscription login).
+- Writing a file in the cwd with `acceptEdits` + `--allowedTools Write Edit Read` worked; `permission_denials` was empty.
+- A haiku-class model finished in 2 turns, ~5 s.
+
+### Observed 2026-10-31: `claude -p --json-schema` as reviewer (sample: `fixtures/providers/claude/print-json-review.sample.json`)
+- With the diff in the prompt and `--tools ""`, the result object has `structured_output` (parsed object) and `result` (the same JSON as a string), `is_error: false`, `num_turns` 2.
+
+### Observed 2026-10-31: `codex exec --output-schema` as reviewer (samples: `fixtures/providers/codex/exec-json-review.sample.jsonl`, `exec-json-schema-error.sample.jsonl`, `review-output.schema.json`)
+- The schema must satisfy OpenAI strict mode: **every property listed in `required`**, `additionalProperties: false`. An optional `line` is rejected: events `error` + `turn.failed` with message `Invalid schema for response_format ... Missing 'line'`, exit code 1, no `-o` file. The working schema makes `line` `["integer","null"]` and required; the adapter drops `null` lines.
+- On success: `thread.started`, `turn.started`, `item.completed` (`agent_message`, text is the JSON), `turn.completed`; the `-o` file holds the same JSON. With `-s read-only` and the diff in the prompt no file access was needed.
+- The model returned `verdict: "changes_requested"` with only a `minor` issue, contradicting the verdict rule of `review-result.md`. Adapters therefore **derive the verdict from the issues** (see `review-result.md`).
 
 ### Observed: `codex exec --json` (sample: `fixtures/providers/codex/exec-json.sample.jsonl`)
 - JSONL events seen: `thread.started` (`thread_id`), `turn.started`, `item.completed` (`item.type: "agent_message"`, `item.text`), `turn.completed` (`usage`: `input_tokens`, `cached_input_tokens`, `cache_write_input_tokens`, `output_tokens`, `reasoning_output_tokens`). Tool-call item types were not seen (the model made no tool calls).
