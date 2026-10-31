@@ -33,6 +33,7 @@ Stages 1-4 of 6 are done: core, the `panosu` CLI (`delegate`, `list`, `eval`), r
 ![Task list](docs/screenshots/tasks.png)
 ![Task detail](docs/screenshots/task-detail.png)
 ![Scorecard](docs/screenshots/scorecard.png)
+![Task detail, dark theme](docs/screenshots/task-detail-dark.png)
 
 ## Quick start
 
