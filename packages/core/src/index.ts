@@ -12,3 +12,4 @@ export { createFakeScenario, scenarios } from "./fake.js";
 export type { FakeOutcome, FakeScenarioSpec } from "./fake.js";
 export { runTask } from "./run-task.js";
 export type { RunTaskDeps } from "./run-task.js";
+export { structurallyEqual } from "./structural.js";
