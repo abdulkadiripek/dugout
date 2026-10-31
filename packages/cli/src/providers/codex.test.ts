@@ -1,4 +1,5 @@
 import { expect, it, vi } from "vitest";
+import { dirname, join } from "node:path";
 import { existsSync, readFileSync } from "node:fs";
 import { createCodexAdapter } from "./codex.js";
 import { reviewJsonSchema, buildReviewPrompt } from "./review-prompt.js";
@@ -69,7 +70,7 @@ it("reviews recorded output, passes schema and prompt, and removes the schema", 
   expect(result.issues).toHaveLength(1);
   expect(result.issues[0]?.severity).toBe("minor");
   expect(getDiff).toHaveBeenCalledWith(input.cwd, "HEAD");
-  expect(spawn).toHaveBeenCalledWith("codex", ["exec", "--json", "-m", input.model, "-s", "read-only", "-C", input.cwd, "--skip-git-repo-check", "--ephemeral", "--output-schema", schemaPath, buildReviewPrompt({ ...context(), diff: "test diff" })], { cwd: input.cwd });
+  expect(spawn).toHaveBeenCalledWith("codex", ["exec", "--json", "-m", input.model, "-s", "read-only", "-C", input.cwd, "--skip-git-repo-check", "--ephemeral", "--output-schema", schemaPath, "-o", join(dirname(schemaPath), "output.json"), buildReviewPrompt({ ...context(), diff: "test diff" })], { cwd: input.cwd });
   expect(existsSync(schemaPath)).toBe(false);
 });
 it.each(["invalid-json", "invalid-review", "crash", "timeout", "null-line"])("handles review %s and cleans up", async scenario => {

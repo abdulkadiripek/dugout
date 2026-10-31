@@ -3,10 +3,11 @@ import { randomBytes } from "node:crypto";
 import { appendFileSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { promisify } from "node:util";
-import { createFakeScenario, parseTaskPackage, runTask, type Event, type ProviderAdapter, type ProviderName } from "@panosu/core";
+import { createFakeScenario, parseTaskPackage, runTask, type Event, type ProviderAdapter, type ProviderName, type TaskPackage } from "@panosu/core";
 import type { IO, Deps } from "./cli.js";
 import type { Config } from "./config.js";
 import { createEventWriter } from "./event-writer.js";
+import { createCodexAdapter, createClaudeAdapter, spawnReal } from "./providers/index.js";
 import { scenarioSpec } from "./scenarios.js";
 import { runVerifyCommand } from "./verify-runner.js";
 import { commitAll, createWorktree, currentBase, diffStat, findRepoRoot, stageAll } from "./worktree.js";
@@ -51,14 +52,33 @@ function report(events: Event[], log: string, io: IO): void {
   io.stdout(`task: ${finished.taskId}\nstatus: ${finished.status}\nattempts: ${finished.attempts}\nproviders: ${finished.providers.join(",")}\nreview: ${verdict}\nlog: ${display}\n`);
 }
 
+function buildAdapters(pkg: TaskPackage, scenario: string | undefined, deps: Deps): Partial<Record<ProviderName, ProviderAdapter>> {
+  if (scenario !== undefined || pkg.providers.every(provider => provider === "fake")) {
+    return createFakeScenario(scenarioSpec(scenario ?? "success", pkg.providers)).adapters;
+  }
+  if (pkg.providers.includes("fake")) throw new Error("fake cannot be mixed with other providers");
+  const options = {
+    spawn: deps.spawn ?? spawnReal,
+    context: () => ({ goal: pkg.goal, acceptance: pkg.acceptance }),
+  };
+  const adapters: Partial<Record<ProviderName, ProviderAdapter>> = {};
+  for (const provider of pkg.providers) {
+    if (provider === "codex") adapters.codex = createCodexAdapter(options);
+    if (provider === "claude") adapters.claude = createClaudeAdapter(options);
+  }
+  return adapters;
+}
+
 export async function delegate(options: Options, io: IO, config: Config, deps: Deps): Promise<number> {
   const pkg = parseTaskPackage(readFileSync(options.file, "utf8"));
   if (options.providers !== undefined) {
-    if (options.providers !== "fake") throw new Error("Only --providers fake is supported until Stage 3");
-    pkg.providers = ["fake"];
+    pkg.providers = options.providers.split(",").map((provider) => {
+      if (provider !== "codex" && provider !== "claude" && provider !== "fake") throw new Error(`Unknown provider: ${provider}`);
+      return provider;
+    });
+    if (pkg.providers.includes("fake") && pkg.providers.some(provider => provider !== "fake")) throw new Error("fake cannot be mixed with other providers");
   }
-  if (!options.scenario && pkg.providers.some((provider) => provider !== "fake")) throw new Error("Real providers are not supported until Stage 3; use --scenario or --providers fake");
-  const fake = createFakeScenario(scenarioSpec(options.scenario ?? "success", pkg.providers));
+  const built = buildAdapters(pkg, options.scenario, deps);
   const repo = await findRepoRoot(resolve(io.cwd, options.repo ?? "."));
   validatePaths(repo, pkg.files_to_read);
   const controller = new AbortController();
@@ -77,7 +97,7 @@ export async function delegate(options: Options, io: IO, config: Config, deps: D
     const cwd = resolve(repo, worktree.path);
     const adapters: Partial<Record<ProviderName, ProviderAdapter>> = {};
     for (const provider of pkg.providers) {
-      const adapter = fake.adapters[provider];
+      const adapter = built[provider];
       if (adapter) adapters[provider] = { name: provider, run: (input) => adapter.run({ ...input, cwd: resolve(repo, input.cwd) }), review: (input) => adapter.review({ ...input, cwd: resolve(repo, input.cwd) }) };
     }
     const writer = createEventWriter(options.eventsDir, taskId);
@@ -85,6 +105,12 @@ export async function delegate(options: Options, io: IO, config: Config, deps: D
     const result = await runTask(pkg, {
       now: deps.now ?? (() => new Date()), newId: () => suffix, models: config.models, worktree, signal: controller.signal, adapters,
       emit(event) { check(); writer.emit(event); events.push(event); },
+      ...(pkg.setup === undefined ? {} : { setup: async (path: string, command: string) => {
+        check();
+        const outcome = await runVerifyCommand(resolve(repo, path), command, { timeoutMs: config.verifyTimeoutMs, signal: controller.signal });
+        check();
+        return outcome;
+      } }),
       async runVerify(path, command) {
         check();
         await stageAll(resolve(repo, path));

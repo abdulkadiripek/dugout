@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { eventSchema, type TaskPackage } from "@panosu/core";
-import { main } from "./cli.js";
+import { main, type Deps } from "./cli.js";
 
 const exec = promisify(execFile);
 export async function git(cwd: string, ...args: string[]): Promise<string> {
@@ -27,9 +27,9 @@ export function packageFile(file: string, changes: Partial<TaskPackage> = {}) {
 export function readEvents(file: string) {
   return readFileSync(file, "utf8").trim().split("\n").map((line) => eventSchema.parse(JSON.parse(line)));
 }
-export async function invoke(ctx: Awaited<ReturnType<typeof setup>>, args: string[]) {
+export async function invoke(ctx: Awaited<ReturnType<typeof setup>>, args: string[], deps: Deps = {}) {
   let stdout = "";
   let stderr = "";
-  const code = await main(args, { cwd: ctx.repo, homedir: ctx.dir, stdout: (text) => { stdout += text; }, stderr: (text) => { stderr += text; } }, { newId: () => "abcd" });
+  const code = await main(args, { cwd: ctx.repo, homedir: ctx.dir, stdout: (text) => { stdout += text; }, stderr: (text) => { stderr += text; } }, { newId: () => "abcd", ...deps });
   return { code, stdout, stderr };
 }

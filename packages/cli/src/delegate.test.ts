@@ -48,10 +48,11 @@ it("commits verify-created files only on the task branch and excludes worktrees 
   expect(readFileSync(join(ctx.repo, ".git/info/exclude"), "utf8").split("\n").filter((line) => line === ".worktrees/")).toHaveLength(1);
 });
 
-it.each(["acceptance", "escape", "missing", "parse", "real", "positions", "symlink"])("rejects %s before side effects", async (kind) => {
+it.each(["acceptance", "escape", "missing", "parse", "mixed", "positions", "symlink"])("rejects %s before side effects", async (kind) => {
   packageFile(ctx.file);
   const args = ["delegate", ctx.file, "--events-dir", ctx.events];
-  if (kind !== "real") args.push("--scenario", kind === "positions" ? "fallback" : "success");
+  if (kind !== "mixed") args.push("--scenario", kind === "positions" ? "fallback" : "success");
+  if (kind === "mixed") packageFile(ctx.file, { providers: ["claude", "fake"] });
   if (kind === "acceptance") writeFileSync(ctx.file, readFileSync(ctx.file, "utf8").replace('"acceptance":["Works"],', ""));
   if (kind === "escape") packageFile(ctx.file, { files_to_read: ["../outside"] });
   if (kind === "missing") rmSync(ctx.file);
@@ -64,7 +65,7 @@ it.each(["acceptance", "escape", "missing", "parse", "real", "positions", "symli
   const result = await invoke(ctx, args);
   expect(result.code).toBe(3);
   expect(result.stderr).not.toBe("");
-  if (kind === "real") expect(result.stderr).toContain("Stage 3");
+  if (kind === "mixed") expect(result.stderr).toContain("fake cannot be mixed");
   if (kind === "acceptance") expect(result.stderr).toContain("acceptance");
   expect(existsSync(ctx.events)).toBe(false);
   expect(existsSync(join(ctx.repo, ".worktrees"))).toBe(false);

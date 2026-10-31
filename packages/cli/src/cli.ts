@@ -3,6 +3,7 @@ import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { loadConfig } from "./config.js";
 import { delegate } from "./delegate.js";
+import type { SpawnFn } from "./providers/index.js";
 import { list } from "./list.js";
 
 export interface IO {
@@ -11,7 +12,7 @@ export interface IO {
   cwd: string;
   homedir?: string;
 }
-export interface Deps { newId?(): string; now?(): Date }
+export interface Deps { newId?(): string; now?(): Date; spawn?: SpawnFn }
 
 export async function main(argv: string[], io: IO, deps: Deps = {}): Promise<number> {
   const home = io.homedir ?? homedir();

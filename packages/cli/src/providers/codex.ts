@@ -60,7 +60,7 @@ export function createCodexAdapter(opts: AdapterOptions): ProviderAdapter {
         dir = await mkdtemp(join(tmpdir(), "panosu-review-"));
         const schema = join(dir, "schema.json");
         await writeFile(schema, JSON.stringify(reviewJsonSchema));
-        const child = spawn("codex", [...args(input.model, input.cwd, "read-only"), "--skip-git-repo-check", "--ephemeral", "--output-schema", schema, prompt], { cwd: input.cwd });
+        const child = spawn("codex", [...args(input.model, input.cwd, "read-only"), "--skip-git-repo-check", "--ephemeral", "--output-schema", schema, "-o", join(dir, "output.json"), prompt], { cwd: input.cwd });
         const lines = processLines(child, input.signal, timeout);
         let text = "";
         let completed = false;
