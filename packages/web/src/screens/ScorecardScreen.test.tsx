@@ -45,7 +45,7 @@ describe("ScorecardScreen", () => {
     stub(CARD);
     const { container } = render(<ScorecardScreen />);
     await screen.findByRole("list", { name: "Implementers" });
-    const bars = container.querySelectorAll<HTMLElement>(".panel.sc:not(.sev-stack) .bar");
+    const bars = container.querySelectorAll<HTMLElement>(".sc-panel.sc:not(.sev-stack) .bar");
     expect(bars[0]?.querySelectorAll("span")[0]?.style.width).toBe("80%");
     expect(bars[1]?.querySelectorAll("span")[0]?.style.width).toBe("10%");
   });

@@ -54,11 +54,11 @@ export function DetailScreen({ id }: { id: string }) {
   const back = <a className="back" href="#/">&larr; All tasks <span className="kbd">Esc</span></a>;
 
   if (task.state === "loading") {
-    return <section>{back}<p role="status" className="lede">Loading task…</p></section>;
+    return <section className="detail">{back}<p role="status" className="lede">Loading task…</p></section>;
   }
   if (task.state === "missing") {
     return (
-      <section>
+      <section className="detail">
         {back}
         <h1>Task not found</h1>
         <p className="lede">No task with id <span className="mono">{id}</span>.</p>
@@ -67,7 +67,7 @@ export function DetailScreen({ id }: { id: string }) {
   }
   if (task.state === "error") {
     return (
-      <section>
+      <section className="detail">
         {back}
         <div className="empty" role="alert">
           <p>Could not load task: {task.message}</p>
@@ -79,13 +79,13 @@ export function DetailScreen({ id }: { id: string }) {
 
   const { summary, events } = task.task;
   if (summary.status === "unreadable") {
-    return <section>{back}<DetailHeader summary={summary} /></section>;
+    return <section className="detail">{back}<DetailHeader summary={summary} /></section>;
   }
   const attempts = deriveAttempts(events);
   const setup = deriveSetup(events);
   const review = deriveReview(events);
   return (
-    <section>
+    <section className="detail">
       {back}
       <DetailHeader summary={summary} />
       <h2>Timeline</h2>

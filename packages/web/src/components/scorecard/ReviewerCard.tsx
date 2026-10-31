@@ -12,7 +12,7 @@ export function ReviewerCard({ row }: { row: ReviewerRow }) {
   const total = row.blocker + row.major + row.minor + row.nit;
   const widths = barWidths(SEVERITIES.map(([key]) => row[key]), total);
   return (
-    <article className="panel sc sev-stack">
+    <article className="sc-panel sc sev-stack">
       <h3>{row.provider}</h3>
       <div className="muted mono">{row.model}</div>
       <div className="figs">

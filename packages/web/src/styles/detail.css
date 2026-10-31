@@ -33,7 +33,7 @@
 .attgrid .panel { margin-bottom: 0; }
 .row2 { display: flex; flex-wrap: wrap; gap: 8px 20px; color: var(--muted); font-size: 15px; margin: 8px 0; align-items: center; }
 .row2 b { color: var(--fg); }
-pre { margin: 12px 0 0; padding: 14px 16px; background: var(--soft); border-radius: 14px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font: 14px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+.detail pre { margin: 12px 0 0; padding: 14px 16px; background: var(--soft); border-radius: 14px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font: 14px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
 .collapsible { margin-top: 12px; }
 .collapse-btn { background: none; border: 0; padding: 4px 0; color: var(--muted); font-weight: 600; font-size: 15px; text-align: left; }
 .collapsible ul { margin: 8px 0 0; padding-left: 20px; color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }

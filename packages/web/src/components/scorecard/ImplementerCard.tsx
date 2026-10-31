@@ -6,7 +6,7 @@ import { barWidths, formatDecimal, percent } from "./geometry.js";
 export function ImplementerCard({ row, maxTokens }: { row: ImplementerRow; maxTokens: number }) {
   const [inWidth = 0, outWidth = 0] = barWidths([row.inputTokens, row.outputTokens], maxTokens);
   return (
-    <article className="panel sc">
+    <article className="sc-panel sc">
       <h3>{row.provider}</h3>
       <div className="muted mono">{row.model}</div>
       <div className="figs">

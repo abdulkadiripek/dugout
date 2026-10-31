@@ -1,4 +1,4 @@
-.panel { background: var(--surface); border-radius: 22px; padding: 26px; border: 1px solid var(--line); box-shadow: var(--shadow); }
+.sc-panel { background: var(--surface); border-radius: 22px; padding: 26px; border: 1px solid var(--line); box-shadow: var(--shadow); }
 .sgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; list-style: none; padding: 0; margin: 0; }
 .sc h3 { margin: 0; font-size: 20px; overflow-wrap: anywhere; }
 .sc .mono { overflow-wrap: anywhere; }
@@ -14,5 +14,5 @@
 .scorecard h2:first-of-type { margin-top: 8px; }
 @media (max-width: 640px) {
   .sgrid { grid-template-columns: minmax(0, 1fr); }
-  .panel { padding: 18px; }
+  .sc-panel { padding: 18px; }
 }
