@@ -53,6 +53,8 @@ interface ProviderAdapter {
 | `models.fake` | `fake` |
 | `attemptTimeoutMs` | `600000` |
 
+File shape: `{ "models": { "<provider>": { "implement": "...", "review": "..." } }, "verifyTimeoutMs": 600000 }`; every key is optional and overrides the default. `verifyTimeoutMs` (default `600000`) bounds the verify runner (see `cli.md`).
+
 Model names live only in config and fixtures, never in logic. Timeouts end an attempt with `exitReason: "timeout"`.
 
 ## `fake` provider scenarios
