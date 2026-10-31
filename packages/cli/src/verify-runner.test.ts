@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, it } from "vitest";
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { runVerifyCommand } from "./verify-runner.js";
@@ -55,4 +55,12 @@ it("does not start a command for a signal already aborted", async () => {
 });
 it("rejects spawn failures", async () => {
   await expect(runVerifyCommand(join(dir, "missing"), "true", { timeoutMs: 5000 })).rejects.toThrow();
+});
+it("terminates processes left in the group after the command exits by itself", async () => {
+  const result = await runVerifyCommand(dir, "sleep 30 & echo $! > pid; exit 3", { timeoutMs: 20000 });
+  expect(result).toMatchObject({ passed: false, exitCode: 3 });
+  const pid = Number(readFileSync(join(dir, "pid"), "utf8"));
+  const alive = () => { try { process.kill(pid, 0); return true; } catch { return false; } };
+  for (let i = 0; i < 30 && alive(); i++) await new Promise(resolve => setTimeout(resolve, 100));
+  expect(alive()).toBe(false);
 });

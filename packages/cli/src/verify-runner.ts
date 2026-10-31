@@ -65,6 +65,9 @@ export function runVerifyCommand(cwd: string, command: string, opts: VerifyOptio
       opts.signal?.removeEventListener("abort", abort);
       reject(error);
     });
+    child.on("exit", () => {
+      if (stopped === undefined) signalGroup("SIGTERM");
+    });
     child.on("close", (exitCode) => {
       closed = true;
       code = exitCode;

@@ -10,7 +10,7 @@ import { createEventWriter } from "./event-writer.js";
 import { createCodexAdapter, createClaudeAdapter, spawnReal } from "./providers/index.js";
 import { scenarioSpec } from "./scenarios.js";
 import { runVerifyCommand } from "./verify-runner.js";
-import { commitAll, createWorktree, currentBase, diffStat, findRepoRoot, stageAll } from "./worktree.js";
+import { commitAll, createWorktree, currentBase, diffStat, findRepoRoot, resolveCommit, stageAll } from "./worktree.js";
 
 interface Options { file: string; eventsDir: string; repo: string | undefined; providers: string | undefined; scenario: string | undefined; overlay?: string }
 const exec = promisify(execFile);
@@ -34,9 +34,8 @@ async function verifyWithOverlay(overlay: string, cwd: string, run: () => Promis
   const files = listFiles(overlay);
   const clash = files.find((file) => existsSync(resolve(cwd, file)));
   if (clash !== undefined) {
-    const message = `check file would overwrite an existing file: ${clash}`;
-    io.stderr(`${message}\n`);
-    return { passed: false, exitCode: 1, durationMs: 0, outputTail: message };
+    io.stderr(`check file would overwrite an existing file: ${clash}\n`);
+    return { passed: false, exitCode: 1, durationMs: 0, outputTail: "a reserved path collided with the task's files" };
   }
   const dirs = new Set<string>();
   try {
@@ -112,29 +111,33 @@ export async function delegate(options: Options, io: IO, config: Config, deps: D
   const repo = await findRepoRoot(resolve(io.cwd, options.repo ?? "."));
   validatePaths(repo, pkg.files_to_read);
   const controller = new AbortController();
-  const stop = () => controller.abort();
+  let interrupted = false;
+  const stop = () => { interrupted = true; controller.abort(); };
   process.on("SIGINT", stop);
   process.on("SIGTERM", stop);
   try {
     const check = () => controller.signal.throwIfAborted();
     const baseRef = await currentBase(repo);
+    const baseCommit = await resolveCommit(repo, baseRef);
     const suffix = deps.newId?.() ?? randomBytes(2).toString("hex");
     const taskId = `${pkg.id}-${suffix}`;
     check();
     await excludeWorktrees(repo);
-    const worktree = await createWorktree(repo, taskId, baseRef);
+    const worktree = { ...(await createWorktree(repo, taskId, baseCommit)), baseRef };
     check();
     const cwd = resolve(repo, worktree.path);
     const adapters: Partial<Record<ProviderName, ProviderAdapter>> = {};
     for (const provider of pkg.providers) {
       const adapter = built[provider];
-      if (adapter) adapters[provider] = { name: provider, run: (input) => adapter.run({ ...input, cwd: resolve(repo, input.cwd) }), review: (input) => adapter.review({ ...input, cwd: resolve(repo, input.cwd) }) };
+      if (adapter) adapters[provider] = { name: provider, run: (input) => adapter.run({ ...input, cwd: resolve(repo, input.cwd) }), review: (input) => adapter.review({ ...input, baseRef: baseCommit, cwd: resolve(repo, input.cwd) }) };
     }
     const writer = createEventWriter(options.eventsDir, taskId, io.homedir === undefined ? {} : { homedir: io.homedir });
     const events: Event[] = [];
     const result = await runTask(pkg, {
       now: deps.now ?? (() => new Date()), newId: () => suffix, models: config.models, worktree, signal: controller.signal, adapters,
-      emit(event) { check(); writer.emit(event); events.push(event); },
+      emit(event) {
+        try { check(); writer.emit(event); events.push(event); } catch (error) { controller.abort(); throw error; }
+      },
       ...(pkg.setup === undefined ? {} : { setup: async (path: string, command: string) => {
         check();
         const outcome = await runVerifyCommand(resolve(repo, path), command, { timeoutMs: config.verifyTimeoutMs, signal: controller.signal });
@@ -151,15 +154,17 @@ export async function delegate(options: Options, io: IO, config: Config, deps: D
         await stageAll(cwd);
         return outcome;
       },
-      async diffStat() { check(); return diffStat(cwd, baseRef); },
+      async diffStat() { check(); return diffStat(cwd, baseCommit); },
     });
     check();
-    await commitAll(cwd, `panosu: ${taskId}`);
-    check();
     report(events, writer.path, io);
+    try { await commitAll(cwd, `panosu: ${taskId}`); } catch (error) {
+      io.stderr(`warning: could not commit the task branch: ${error instanceof Error ? error.message : String(error)}\n`);
+    }
     return { passed: 0, needs_review: 1, failed: 2 }[result.status];
   } catch (error) {
-    if (controller.signal.aborted) return 130;
+    controller.abort();
+    if (interrupted) return 130;
     throw error;
   } finally {
     process.off("SIGINT", stop);

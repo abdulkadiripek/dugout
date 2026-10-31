@@ -44,4 +44,16 @@ describe("loadConfig", () => {
     expect(() => loadConfig(file)).toThrow(ConfigError);
     expect(() => loadConfig(file)).toThrow(key);
   });
+  it.each([
+    ["verifyTimeoutMs", 0], ["verifyTimeoutMs", -5], ["verifyTimeoutMs", 3e9], ["verifyTimeoutMs", 1.5],
+    ["attemptTimeoutMs", 0], ["attemptTimeoutMs", 3e9], ["attemptTimeoutMs", 2.5],
+  ])("rejects %s of %s", (key, value) => {
+    writeFileSync(file, JSON.stringify({ [key]: value }));
+    expect(() => loadConfig(file)).toThrow(ConfigError);
+    expect(() => loadConfig(file)).toThrow(key);
+  });
+  it("accepts valid timeouts", () => {
+    writeFileSync(file, JSON.stringify({ verifyTimeoutMs: 2147483647, attemptTimeoutMs: 1 }));
+    expect(loadConfig(file).verifyTimeoutMs).toBe(2147483647);
+  });
 });

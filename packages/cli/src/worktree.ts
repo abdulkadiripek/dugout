@@ -23,6 +23,10 @@ export async function currentBase(repo: string): Promise<string> {
   return branch === "HEAD" ? git(repo, ["rev-parse", "HEAD"]) : branch;
 }
 
+export function resolveCommit(repo: string, ref: string): Promise<string> {
+  return git(repo, ["rev-parse", "--verify", "--end-of-options", `${ref}^{commit}`]);
+}
+
 export interface Worktree {
   path: string;
   branch: string;
@@ -68,6 +72,6 @@ export async function diffStat(worktreeDir: string, baseRef: string): Promise<Di
 
 export async function commitAll(worktreeDir: string, message: string): Promise<boolean> {
   if (!(await git(worktreeDir, ["diff", "--cached", "--name-only"]))) return false;
-  await git(worktreeDir, ["-c", "user.name=panosu", "-c", "user.email=panosu@localhost", "commit", "-m", message]);
+  await git(worktreeDir, ["-c", "user.name=panosu", "-c", "user.email=panosu@localhost", "-c", "commit.gpgsign=false", "commit", "--no-verify", "-m", message]);
   return true;
 }

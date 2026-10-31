@@ -19,6 +19,13 @@ function object(value: unknown, key: string): Record<string, unknown> {
   return value as Record<string, unknown>;
 }
 
+function timeout(value: unknown, key: string): number {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 1 || value > 2147483647) {
+    throw new ConfigError(`${key} must be an integer between 1 and 2147483647`);
+  }
+  return value;
+}
+
 export function loadConfig(file = join(homedir(), ".ajan-panosu", "config.json")): Config {
   const config: Config = {
     models: {
@@ -55,11 +62,8 @@ export function loadConfig(file = join(homedir(), ".ajan-panosu", "config.json")
     }
   }
   if ("verifyTimeoutMs" in root) {
-    const value = root.verifyTimeoutMs;
-    if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
-      throw new ConfigError("verifyTimeoutMs must be a finite nonnegative number");
-    }
-    config.verifyTimeoutMs = value;
+    config.verifyTimeoutMs = timeout(root.verifyTimeoutMs, "verifyTimeoutMs");
   }
+  if ("attemptTimeoutMs" in root) timeout(root.attemptTimeoutMs, "attemptTimeoutMs");
   return config;
 }

@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, expect, it } from "vitest";
-import { existsSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { vi } from "vitest";
 import { join } from "node:path";
 import { checkEventLog, structurallyEqual } from "@panosu/core";
+import { sample, scripted } from "./providers/test-helper.js";
+import type { SpawnFn } from "./providers/index.js";
 import { git, invoke, packageFile, readEvents, setup } from "./test-helpers.js";
 
 let ctx: Awaited<ReturnType<typeof setup>>;
@@ -80,4 +83,53 @@ it("scrubs the home directory from the event log but not from stdout", async () 
   const finished = readEvents(join(ctx.events, "task-abcd.jsonl")).find(event => event.type === "verify.finished");
   expect(finished?.type === "verify.finished" ? finished.outputTail : "").toContain("~/");
   expect(result.stdout).toContain("log: ~/events/task-abcd.jsonl\n");
+});
+
+it("aborts provider process groups when delegate fails with an error", async () => {
+  packageFile(ctx.file, { providers: ["codex"], review: false });
+  const lines = await sample("codex/exec-json-tools.sample.jsonl");
+  const child = scripted([lines[2]!], 0, true);
+  const spawn = vi.fn<SpawnFn>(() => {
+    const log = join(ctx.events, "task-abcd.jsonl");
+    rmSync(log);
+    mkdirSync(log);
+    return child;
+  });
+  const result = await invoke(ctx, ["delegate", ctx.file, "--events-dir", ctx.events, "--providers", "codex"], { spawn });
+  expect(result.code).toBe(3);
+  expect(spawn).toHaveBeenCalledTimes(1);
+  expect(child.kills).toContain("SIGTERM");
+});
+
+it("diffs against the commit the run started from even if the base branch advances", async () => {
+  const late = join(ctx.repo, "late.txt");
+  const verify = `echo mine > mine.txt; echo late > '${late}'; git -C '${ctx.repo}' add late.txt; git -C '${ctx.repo}' -c user.name=t -c user.email=t@localhost commit -qm late`;
+  packageFile(ctx.file, { verify, providers: ["codex", "claude"], review: true });
+  const prompts: string[] = [];
+  const codex = await sample("codex/exec-json-tools.sample.jsonl");
+  const approve = { verdict: "approve", summary: "ok", issues: [] };
+  const review = JSON.stringify({ ...JSON.parse(readFileSync(new URL("../../../fixtures/providers/claude/print-json-review.sample.json", import.meta.url), "utf8")), result: JSON.stringify(approve), structured_output: approve });
+  const spawn = vi.fn<SpawnFn>((command, args) => {
+    if (command === "claude") { prompts.push(args.join("\n")); return scripted([review]); }
+    return scripted(codex);
+  });
+  const result = await invoke(ctx, ["delegate", ctx.file, "--events-dir", ctx.events], { spawn });
+  expect(result.code).toBe(0);
+  expect(await git(ctx.repo, "ls-tree", "--name-only", "main")).toContain("late.txt");
+  const finished = readEvents(join(ctx.events, "task-abcd.jsonl")).find(event => event.type === "task.finished");
+  expect(finished).toMatchObject({ diffStat: { files: 1 } });
+  expect(prompts).toHaveLength(1);
+  expect(prompts[0]).toContain("mine.txt");
+  expect(prompts[0]).not.toContain("late.txt");
+});
+
+it("still reports and exits normally when hooks and signing would break the commit", async () => {
+  await git(ctx.repo, "config", "commit.gpgsign", "true");
+  await git(ctx.repo, "config", "gpg.program", "/nonexistent/gpg");
+  writeFileSync(join(ctx.repo, ".git/hooks/pre-commit"), "#!/bin/sh\nexit 1\n", { mode: 0o755 });
+  packageFile(ctx.file, { verify: "echo x > result", review: false });
+  const result = await invoke(ctx, ["delegate", ctx.file, "--providers", "fake", "--events-dir", ctx.events]);
+  expect(result).toMatchObject({ code: 0, stderr: "" });
+  expect(result.stdout).toContain("status: passed");
+  expect(await git(join(ctx.repo, ".worktrees/task-abcd"), "rev-list", "--count", "main..HEAD")).toBe("1");
 });

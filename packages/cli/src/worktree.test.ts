@@ -69,3 +69,14 @@ it("returns a hash for detached HEAD and reports non-repositories", async () => 
   expect(await currentBase(repo)).toBe(head);
   await expect(findRepoRoot(dir)).rejects.toThrow(/git rev-parse failed:.*not a git repository/s);
 });
+
+it("commits despite failing hooks and unusable signing", async () => {
+  await git(repo, "config", "commit.gpgsign", "true");
+  await git(repo, "config", "gpg.program", "/nonexistent/gpg");
+  mkdirSync(join(repo, ".git/hooks"), { recursive: true });
+  writeFileSync(join(repo, ".git/hooks/pre-commit"), "#!/bin/sh\nexit 1\n", { mode: 0o755 });
+  writeFileSync(join(repo, "new.txt"), "new\n");
+  await stageAll(repo);
+  expect(await commitAll(repo, "hardened")).toBe(true);
+  expect(await git(repo, "log", "-1", "--format=%s")).toBe("hardened");
+});

@@ -30,6 +30,6 @@ export function buildReviewPrompt(input: { goal: string; acceptance: string[]; d
 }
 
 export async function defaultGetDiff(cwd: string, baseRef: string): Promise<string> {
-  const { stdout } = await promisify(execFile)("git", ["diff", "--cached", baseRef], { cwd, maxBuffer: 64 * 1024 * 1024 });
+  const { stdout } = await promisify(execFile)("git", ["diff", "--cached", baseRef, "--"], { cwd, maxBuffer: 64 * 1024 * 1024 });
   return stdout;
 }

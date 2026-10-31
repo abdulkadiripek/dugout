@@ -52,6 +52,7 @@ export async function* processLines(child: SpawnedProcess, signal: AbortSignal, 
     resolve(null);
   }; });
   const timer = setTimeout(stop, timeoutMs);
+  timer.unref();
   signal.addEventListener("abort", stop, { once: true });
   if (signal.aborted) stop();
   const exit = child.exited.then(value => ({ value }), () => ({ value: { code: 1, signal: null } }));

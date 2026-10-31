@@ -115,6 +115,12 @@ describe("overlay collisions", () => {
     const result = await invoke(ctx, ["eval", "all", "--evals-dir", copy, "--events-dir", ctx.events, "--providers", "codex,claude"], { spawn });
     expect(result.code).toBe(0);
     expect(result.stderr).toContain("slugify.hidden.test.ts");
+    for (const log of readdirSync(ctx.events)) {
+      const text = readFileSync(join(ctx.events, log), "utf8");
+      expect(text).not.toContain("slugify.hidden.test.ts");
+    }
+    const failed = readEvents(join(ctx.events, readdirSync(ctx.events).find(log => log.includes("slugify"))!)).find(event => event.type === "verify.finished");
+    expect(failed?.type === "verify.finished" ? failed.outputTail : "").toContain("reserved path");
     expect(result.stdout.split("\n").filter(Boolean)).toEqual([
       "01-slugify  failed  2 attempts  codex",
       "02-fix-off-by-one  passed  1 attempts  codex",
