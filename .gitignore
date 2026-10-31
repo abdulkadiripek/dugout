@@ -5,3 +5,5 @@ node_modules/
 .worktrees/
 *.log
 data/
+CLAUDE.local.md
+.claude/settings.local.json

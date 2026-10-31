@@ -1,0 +1,12 @@
+{"schemaVersion":1,"seq":0,"ts":"2026-01-15T10:00:00.000Z","taskId":"add-slugify-a1b2","type":"task.created","package":{"id":"add-slugify","goal":"Add a slugify helper.","files_to_read":["packages/core/src/text.ts"],"constraints":["No new dependencies"],"acceptance":["slugify('Hello World') returns 'hello-world'"],"verify":"pnpm test","max_retries":2,"review":true,"providers":["codex","claude"]}}
+{"schemaVersion":1,"seq":1,"ts":"2026-01-15T10:00:01.000Z","taskId":"add-slugify-a1b2","type":"worktree.created","path":".worktrees/add-slugify-a1b2","branch":"panosu/add-slugify-a1b2","baseRef":"main"}
+{"schemaVersion":1,"seq":2,"ts":"2026-01-15T10:00:02.000Z","taskId":"add-slugify-a1b2","type":"attempt.started","attempt":1,"reason":"initial","provider":"codex","model":"gpt-6-astra"}
+{"schemaVersion":1,"seq":3,"ts":"2026-01-15T10:00:20.000Z","taskId":"add-slugify-a1b2","type":"provider.tool","attempt":1,"name":"edit","summary":"packages/core/src/text.ts"}
+{"schemaVersion":1,"seq":4,"ts":"2026-01-15T10:00:41.000Z","taskId":"add-slugify-a1b2","type":"provider.tool","attempt":1,"name":"edit","summary":"packages/core/src/text.test.ts"}
+{"schemaVersion":1,"seq":5,"ts":"2026-01-15T10:01:36.000Z","taskId":"add-slugify-a1b2","type":"provider.usage","attempt":1,"inputTokens":18200,"outputTokens":2100}
+{"schemaVersion":1,"seq":6,"ts":"2026-01-15T10:01:36.100Z","taskId":"add-slugify-a1b2","type":"attempt.finished","attempt":1,"status":"completed","exitReason":"ok","durationMs":94000}
+{"schemaVersion":1,"seq":7,"ts":"2026-01-15T10:01:36.200Z","taskId":"add-slugify-a1b2","type":"verify.started","attempt":1,"command":"pnpm test"}
+{"schemaVersion":1,"seq":8,"ts":"2026-01-15T10:01:39.400Z","taskId":"add-slugify-a1b2","type":"verify.finished","attempt":1,"passed":true,"exitCode":0,"durationMs":3200,"outputTail":"Tests  6 passed (6)"}
+{"schemaVersion":1,"seq":9,"ts":"2026-01-15T10:01:39.500Z","taskId":"add-slugify-a1b2","type":"review.started","provider":"claude","model":"claude-sonnet-5-5"}
+{"schemaVersion":1,"seq":10,"ts":"2026-01-15T10:02:11.000Z","taskId":"add-slugify-a1b2","type":"review.finished","provider":"claude","model":"claude-sonnet-5-5","result":{"verdict":"approve","summary":"Small, well-tested helper; matches acceptance.","issues":[]}}
+{"schemaVersion":1,"seq":11,"ts":"2026-01-15T10:02:11.100Z","taskId":"add-slugify-a1b2","type":"task.finished","status":"passed","attempts":1,"providers":["codex"],"diffStat":{"files":2,"additions":41,"deletions":0},"durationMs":131100}
