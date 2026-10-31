@@ -53,3 +53,23 @@ it("rejects invalid nested package and review fields", () => {
     result: { verdict: "changes_requested", summary: "Fine.", issues: [] },
   })).toThrow(/verdict/);
 });
+
+it("includes the setup failure fixture", () => {
+  expect(fixtures).toContain("setup-failed.jsonl");
+});
+
+const setupFinished = {
+  ...envelope, type: "setup.finished", passed: false, exitCode: 1, durationMs: 12, outputTail: "Unavailable",
+};
+
+it("accepts setup outcomes", () => {
+  expect(eventSchema.parse(setupFinished)).toEqual(setupFinished);
+  expect(eventSchema.parse({ ...setupFinished, passed: true, exitCode: 0 })).toMatchObject({ passed: true });
+});
+
+it.each([
+  { passed: undefined }, { passed: "false" }, { exitCode: 1.5 }, { exitCode: undefined },
+  { durationMs: -1 }, { durationMs: undefined }, { outputTail: undefined }, { outputTail: 0 },
+])("rejects invalid setup outcome %j", (invalid) => {
+  expect(eventSchema.safeParse({ ...setupFinished, ...invalid }).success).toBe(false);
+});

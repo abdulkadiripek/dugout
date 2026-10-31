@@ -1,4 +1,5 @@
-import type { ProviderAdapter, VerifyOutcome } from "./adapter.js";
+import type { ProviderAdapter, ReviewInput, VerifyOutcome } from "./adapter.js";
+import { reviewResultSchema, type ReviewResult } from "./review.js";
 import type { Event } from "./events.js";
 import type { ProviderName, TaskPackage } from "./task-package.js";
 
@@ -10,6 +11,7 @@ export interface RunTaskDeps {
   now(): Date;
   newId(): string;
   adapters: Partial<Record<ProviderName, ProviderAdapter>>;
+  setup?(cwd: string, command: string): Promise<VerifyOutcome>;
   runVerify(cwd: string, command: string): Promise<VerifyOutcome>;
   diffStat(): Promise<TaskFinished["diffStat"]>;
   models: {
@@ -35,9 +37,37 @@ function reviewer(pkg: TaskPackage, implementer: ProviderName): ProviderName {
   return pkg.providers.find((provider) => provider !== implementer) ?? implementer;
 }
 
+async function runSetup(
+  command: string | undefined, deps: RunTaskDeps, emit: (event: EventPayload) => void,
+): Promise<boolean> {
+  if (command === undefined) return true;
+  if (!deps.setup) throw new Error("Missing deps.setup for package setup command");
+  const outcome = await deps.setup(deps.worktree.path, command);
+  const outputTail = outcome.outputTail.split(/\r?\n/).slice(-30).join("\n");
+  emit({ type: "setup.finished", ...outcome, outputTail });
+  return outcome.passed;
+}
+
+async function runReview(adapter: ProviderAdapter, input: ReviewInput): Promise<ReviewResult> {
+  try {
+    return reviewResultSchema.parse(await adapter.review(input));
+  } catch (error) {
+    const reason = (error instanceof Error ? error.message : String(error))
+      .replace(/[\r\n\u2028\u2029]+/g, " ").slice(0, 200);
+    const message = `review unavailable: ${reason}`;
+    return {
+      verdict: "changes_requested", summary: message,
+      issues: [{ file: ".", severity: "blocker", message }],
+    };
+  }
+}
+
 export async function runTask(
   pkg: TaskPackage, deps: RunTaskDeps,
 ): Promise<{ status: TaskFinished["status"]; taskId: string }> {
+  if (pkg.setup !== undefined && !deps.setup) {
+    throw new Error("Missing deps.setup for package setup command");
+  }
   const start = deps.now().getTime();
   const taskId = `${pkg.id}-${deps.newId()}`;
   let seq = 0;
@@ -56,7 +86,9 @@ export async function runTask(
   emit({ type: "task.created", package: pkg });
   emit({ type: "worktree.created", ...deps.worktree });
 
+  const setupPassed = await runSetup(pkg.setup, deps, emit);
   providerLoop: for (const [index, provider] of pkg.providers.entries()) {
+    if (!setupPassed) break;
     const adapter = adapterFor(provider);
     let prompt = originalPrompt;
     for (let retries = 0; retries <= pkg.max_retries; retries++) {
@@ -97,7 +129,7 @@ export async function runTask(
             const reviewProvider = reviewer(pkg, provider);
             const model = deps.models.review[reviewProvider];
             emit({ type: "review.started", provider: reviewProvider, model });
-            const result = await adapterFor(reviewProvider).review({
+            const result = await runReview(adapterFor(reviewProvider), {
               taskId, cwd: deps.worktree.path, baseRef: deps.worktree.baseRef,
               model, signal: deps.signal,
             });

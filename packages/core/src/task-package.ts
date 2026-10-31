@@ -11,6 +11,7 @@ export const taskPackageSchema = z.object({
   files_to_read: z.array(repoRelativePathSchema),
   constraints: z.array(z.string()),
   acceptance: z.array(z.string()).min(1),
+  setup: z.string().refine((value) => value.trim().length > 0, "setup must be non-empty").optional(),
   verify: z.string().refine((value) => value.trim().length > 0, "verify must be non-empty"),
   max_retries: z.number().int().min(0).max(5).default(2),
   review: z.boolean().default(true),

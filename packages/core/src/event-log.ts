@@ -14,11 +14,19 @@ export function checkEventLog(events: readonly Event[]): string[] {
   }
   const pending = new Set<number>();
   const started = new Set<number>();
+  let worktreeCreated = false;
+  let setupFailed = false;
   events.forEach((event, index) => {
     if (event.seq !== index) {
       problems.push(`Non-contiguous seq: expected ${index}, received ${event.seq}`);
     }
+    if (event.type === "worktree.created") worktreeCreated = true;
+    if (event.type === "setup.finished") {
+      if (!worktreeCreated) problems.push("setup.finished before worktree.created");
+      if (!event.passed) setupFailed = true;
+    }
     if (event.type === "attempt.started") {
+      if (setupFailed) problems.push("attempt.started after failed setup.finished");
       if (started.has(event.attempt)) {
         problems.push(`Duplicate attempt.started for attempt ${event.attempt}`);
       }

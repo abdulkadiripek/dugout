@@ -89,3 +89,14 @@ describe("task packages", () => {
     expect(() => parseTaskPackage("---\nid: task\n---")).toThrow(/acceptance/);
   });
 });
+
+it("round-trips optional setup through frontmatter", () => {
+  const setup = "pnpm install --offline --frozen-lockfile";
+  expect(taskPackageSchema.parse(minimal)).not.toHaveProperty("setup");
+  expect(parseTaskPackage(example.replace("verify: pnpm test", `setup: ${setup}\nverify: pnpm test`)))
+    .toEqual({ ...parseTaskPackage(example), setup });
+});
+
+it.each(["", " \n "])("rejects empty setup %j", (setup) => {
+  expect(() => taskPackageSchema.parse({ ...minimal, setup })).toThrow(/setup must be non-empty/);
+});

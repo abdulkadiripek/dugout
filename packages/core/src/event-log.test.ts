@@ -82,3 +82,26 @@ it("reports an empty log", () => {
     "First event must be task.created", "Expected exactly one task.finished, found 0",
   ]);
 });
+
+const worktree = eventSchema.parse({
+  ...envelope, seq: 1, type: "worktree.created", path: ".worktrees/task-ab12", branch: "panosu/task-ab12", baseRef: "main",
+});
+const setupFinished = eventSchema.parse({
+  ...envelope, seq: 2, type: "setup.finished", passed: false, exitCode: 1, durationMs: 10, outputTail: "Failed",
+});
+
+it("reports setup before worktree creation", () => {
+  expect(checkEventLog(resequence([created, setupFinished, worktree, done])))
+    .toContain("setup.finished before worktree.created");
+});
+
+it("reports attempts following failed setup", () => {
+  expect(checkEventLog(resequence([created, worktree, setupFinished, started, finished, done])))
+    .toEqual(["attempt.started after failed setup.finished"]);
+});
+
+it("accepts attempts following passed setup", () => {
+  expect(checkEventLog(resequence([
+    created, worktree, eventSchema.parse({ ...setupFinished, passed: true, exitCode: 0 }), started, finished, done,
+  ]))).toEqual([]);
+});

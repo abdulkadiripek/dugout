@@ -45,6 +45,10 @@ export const eventSchema = z.discriminatedUnion("type", [
     from: providerNameSchema, to: providerNameSchema,
     reason: z.enum(["rate_limit", "auth", "crash"]),
   }),
+  envelope.extend({
+    type: z.literal("setup.finished"), passed: z.boolean(),
+    exitCode: z.number().int(), durationMs, outputTail: z.string(),
+  }),
   envelope.extend({ type: z.literal("verify.started"), attempt, command: z.string() }),
   envelope.extend({
     type: z.literal("verify.finished"), attempt, passed: z.boolean(),

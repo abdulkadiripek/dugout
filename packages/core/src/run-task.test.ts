@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { expect, it, vi } from "vitest";
 import {
   checkEventLog, createFakeScenario, eventSchema, runTask, taskPackageSchema,
-  type Event, type FakeScenarioSpec, type RunTaskDeps, type TaskPackage,
+  type ReviewResult, type Event, type FakeScenarioSpec, type RunTaskDeps, type TaskPackage,
 } from "./index.js";
 import { structurallyEqual } from "./structural.js";
 
@@ -54,6 +54,7 @@ const fixtures: Record<string, FakeScenarioSpec> = {
   fallback: { codex: [{ exit: "rate_limit" }], claude: [{ exit: "ok" }] },
   "review-issues": { codex: [{ exit: "ok" }], claude: [], review: "changes_requested" },
   failed: { codex: [{ exit: "ok", verify: "fail" }, { exit: "ok", verify: "fail" }] },
+  "setup-failed": { codex: [], claude: [] },
   "all-failed": { codex: [{ exit: "rate_limit" }], claude: [{ exit: "auth" }] },
 };
 
@@ -63,6 +64,9 @@ it.each(Object.entries(fixtures))("matches the %s fixture", async (name, spec) =
   const first = fixture[0];
   if (first?.type !== "task.created") throw new Error("Missing task package");
   const test = setup(spec);
+  if (name === "setup-failed") {
+    test.deps.setup = vi.fn(async () => ({ passed: false, exitCode: 1, durationMs: 10, outputTail: "Setup failed" }));
+  }
   const result = await test.run(first.package);
   expect(structurallyEqual(test.events, fixture)).toBe(true);
   const finish = fixture.at(-1);
@@ -197,4 +201,88 @@ it("forwards tool events unchanged and selects the first different reviewer", as
     provider: "fake", model: "review-fake",
   });
   expect(test.events.at(-1)).toMatchObject({ providers: ["codex"] });
+});
+
+it("runs setup once after worktree creation and before attempts, trimming its output", async () => {
+  const test = setup({ codex: [{ exit: "timeout" }, { exit: "crash" }], claude: [{ exit: "ok" }] });
+  const lines = Array.from({ length: 35 }, (_, i) => `line ${i}`);
+  test.deps.setup = vi.fn(async () => {
+    expect(test.events.map((event) => event.type)).toEqual(["task.created", "worktree.created"]);
+    return { passed: true, exitCode: 0, durationMs: 42, outputTail: lines.join("\r\n") };
+  });
+  expect((await test.run({ ...pkg, setup: "pnpm install --offline --frozen-lockfile" })).status).toBe("passed");
+  expect(test.deps.setup).toHaveBeenCalledExactlyOnceWith(test.deps.worktree.path, "pnpm install --offline --frozen-lockfile");
+  expect(test.events.slice(0, 4).map((event) => event.type))
+    .toEqual(["task.created", "worktree.created", "setup.finished", "attempt.started"]);
+  expect(test.events[2]).toMatchObject({ passed: true, exitCode: 0, durationMs: 42, outputTail: lines.slice(-30).join("\n") });
+});
+
+it("ends failed setup without attempts, verification or review", async () => {
+  const test = setup({ codex: [], claude: [] });
+  const runVerify = vi.fn(test.deps.runVerify);
+  test.deps.runVerify = runVerify;
+  test.deps.setup = vi.fn(async () => ({ passed: false, exitCode: 7, durationMs: 12, outputTail: "Install failed" }));
+  expect((await test.run({ ...pkg, setup: "pnpm install --offline --frozen-lockfile" })).status).toBe("failed");
+  expect(test.events.map((event) => event.type))
+    .toEqual(["task.created", "worktree.created", "setup.finished", "task.finished"]);
+  expect(test.events[2]).toMatchObject({ passed: false, exitCode: 7, durationMs: 12, outputTail: "Install failed" });
+  expect(test.events.at(-1)).toMatchObject({ attempts: 0, providers: [], diffStat: { files: 2, additions: 3, deletions: 1 } });
+  expect(runVerify).not.toHaveBeenCalled();
+});
+
+it("rejects missing setup dependency before emitting anything", async () => {
+  const test = setup({ codex: [] });
+  await expect(runTask({ ...pkg, setup: "pnpm install" }, test.deps)).rejects.toThrow(/Missing deps.setup/);
+  expect(test.events).toEqual([]);
+  expect(test.deps.diffStat).not.toHaveBeenCalled();
+});
+
+it("ignores an available setup dependency when the package has no setup", async () => {
+  const baseline = setup({ codex: [{ exit: "ok" }], claude: [] });
+  const test = setup({ codex: [{ exit: "ok" }], claude: [] });
+  test.deps.setup = vi.fn();
+  await baseline.run();
+  await test.run();
+  expect(test.deps.setup).not.toHaveBeenCalled();
+  expect(test.events).toEqual(baseline.events);
+});
+
+it.each([new Error("Reviewer failed"), new Error(`First\r\nsecond\rthird\u2028fourth${"x".repeat(250)}`), "Review rejected"])(
+  "records reviewer errors and finishes needs_review: %s", async (error) => {
+    const test = setup({ codex: [{ exit: "ok" }], claude: [] });
+    const adapter = test.deps.adapters.claude;
+    if (!adapter) throw new Error("Missing adapter");
+    vi.spyOn(adapter, "review").mockRejectedValue(error);
+    expect((await test.run()).status).toBe("needs_review");
+    const reason = (error instanceof Error ? error.message : error).replace(/[\r\n\u2028\u2029]+/g, " ").slice(0, 200);
+    expect(test.events.find((event) => event.type === "review.finished")).toMatchObject({
+      provider: "claude", model: "review-claude", result: {
+        verdict: "changes_requested", issues: [{ file: ".", severity: "blocker", message: `review unavailable: ${reason}` }],
+      },
+    });
+    expect(test.events.slice(-3).map((event) => event.type)).toEqual(["review.started", "review.finished", "task.finished"]);
+  },
+);
+
+it.each([{}, { verdict: "approve", summary: "Bad verdict", issues: [{ file: "a.ts", severity: "major", message: "Bug" }] }])(
+  "records invalid reviewer output as unavailable: %j", async (invalid) => {
+    const test = setup({ codex: [{ exit: "ok" }], claude: [] });
+    const adapter = test.deps.adapters.claude;
+    if (!adapter) throw new Error("Missing adapter");
+    vi.spyOn(adapter, "review").mockResolvedValue(invalid as ReviewResult);
+    expect((await test.run()).status).toBe("needs_review");
+    const event = test.events.find((event) => event.type === "review.finished");
+    if (event?.type !== "review.finished") throw new Error("Missing review.finished");
+    expect(event.result.verdict).toBe("changes_requested");
+    expect(event.result.issues).toEqual([{ file: ".", severity: "blocker", message: expect.stringMatching(/^review unavailable: /) }]);
+    const message = event.result.issues[0]?.message ?? "";
+    expect(message).not.toMatch(/[\r\n\u2028\u2029]/);
+    expect(message.length).toBeLessThanOrEqual("review unavailable: ".length + 200);
+  },
+);
+
+it("still throws for a missing reviewer adapter", async () => {
+  const test = setup({ codex: [{ exit: "ok" }] });
+  await expect(runTask(pkg, test.deps)).rejects.toThrow("Missing adapter for provider claude");
+  expect(test.events.at(-1)).toMatchObject({ type: "review.started", provider: "claude" });
 });
