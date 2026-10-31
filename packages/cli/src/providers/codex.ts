@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { normalizeReview, type ProviderAdapter, type AttemptResult } from "@panosu/core";
 import { spawnReal, processLines } from "./spawn.js";
 import { buildReviewPrompt, defaultGetDiff, reviewJsonSchema } from "./review-prompt.js";
-import { object, parseLine, number, pathSummary, type AdapterOptions } from "./shared.js";
+import { object, parseLine, number, pathSummary, shellSummary, type AdapterOptions } from "./shared.js";
 
 const usageLimit = (event: Record<string, unknown>): boolean => {
   if (event.type !== "error" && event.type !== "turn.failed") return false;
@@ -50,8 +50,7 @@ export function createCodexAdapter(opts: AdapterOptions): ProviderAdapter {
           if (item.type === "agent_message" && typeof item.text === "string") {
             yield { type: "provider.message", attempt: input.attempt, text: item.text.slice(0, 500) };
           } else if (item.type === "command_execution" && typeof item.command === "string") {
-            const summary = (item.command.split("\n")[0] ?? "").split(`${input.cwd}/`).join("").slice(0, 80);
-            yield { type: "provider.tool", attempt: input.attempt, name: "command", summary };
+            yield { type: "provider.tool", attempt: input.attempt, name: "command", summary: shellSummary(item.command, input.cwd) };
           } else if (item.type === "file_change" && Array.isArray(item.changes)) {
             const summary = item.changes.map(change => object(change).path).filter((path): path is string => typeof path === "string")
               .map(path => pathSummary(path, input.cwd)).join(", ").slice(0, 200);

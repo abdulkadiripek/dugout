@@ -1,7 +1,7 @@
 import { normalizeReview, type ProviderAdapter, type AttemptResult } from "@panosu/core";
 import { spawnReal, processLines } from "./spawn.js";
 import { buildReviewPrompt, defaultGetDiff, reviewJsonSchema } from "./review-prompt.js";
-import { object, parseLine, number, pathSummary, type AdapterOptions } from "./shared.js";
+import { object, parseLine, number, pathSummary, shellSummary, type AdapterOptions } from "./shared.js";
 
 export function createClaudeAdapter(opts: AdapterOptions): ProviderAdapter {
   const spawn = opts.spawn ?? spawnReal;
@@ -39,7 +39,12 @@ export function createClaudeAdapter(opts: AdapterOptions): ProviderAdapter {
             if (item.type === "text" && typeof item.text === "string") {
               yield { type: "provider.message", attempt: input.attempt, text: item.text.slice(0, 500) };
             } else if (item.type === "tool_use" && typeof item.name === "string") {
-              const path = object(item.input).file_path;
+              const toolInput = object(item.input);
+              if (item.name === "Bash") {
+                yield { type: "provider.tool", attempt: input.attempt, name: "bash", summary: typeof toolInput.command === "string" ? shellSummary(toolInput.command, input.cwd) : "" };
+                continue;
+              }
+              const path = toolInput.file_path;
               yield { type: "provider.tool", attempt: input.attempt, name: item.name.toLowerCase(), summary: typeof path === "string" ? pathSummary(path, input.cwd) : "" };
             }
           }

@@ -36,6 +36,18 @@ it("truncates text, permits absent tool paths and rejects malformed JSON", async
   expect(events).toEqual([{ type: "provider.message", attempt: 1, text: "a".repeat(500) }, { type: "provider.tool", attempt: 1, name: "read", summary: "" }]);
   expect(result.exitReason).toBe("invalid_output");
 });
+it("summarizes Bash tool_use without leaking secret values", async () => {
+  const lines = [JSON.stringify({ type: "assistant", message: { content: [
+    { type: "tool_use", name: "Bash", input: { command: "API_KEY=sk-test pnpm test --watch\nrm -rf /" } },
+    { type: "tool_use", name: "Bash", input: {} },
+  ] } })];
+  const { events } = await collect(createClaudeAdapter({ context, spawn: () => scripted(lines) }));
+  expect(events).toEqual([
+    { type: "provider.tool", attempt: 1, name: "bash", summary: "API_KEY=… pnpm test" },
+    { type: "provider.tool", attempt: 1, name: "bash", summary: "" },
+  ]);
+  expect(JSON.stringify(events)).not.toContain("sk-test");
+});
 it.each([false, true])("times out or aborts without waiting for exit (%s)", async abort => {
   const child = scripted([], 0, true);
   const controller = new AbortController();

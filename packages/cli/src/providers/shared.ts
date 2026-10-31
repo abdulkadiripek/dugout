@@ -15,6 +15,18 @@ export function parseLine(line: string): Record<string, unknown> {
   return object(JSON.parse(line));
 }
 export function number(value: unknown): number { return typeof value === "number" ? value : 0; }
+const wrapper = /^(?:\S*\/)?(?:bash|sh)\s+-l?c\s+(?:'([\s\S]*)'|"([\s\S]*)"|([\s\S]*))$/;
+export function shellSummary(command: string, cwd?: string): string {
+  const match = wrapper.exec(command.trim());
+  const inner = match ? match[1] ?? match[2] ?? match[3] ?? "" : command;
+  const line = inner.trim().split("\n")[0] ?? "";
+  return line.split(/\s+/).filter(word => word !== "").slice(0, 3)
+    .map(word => {
+      const eq = word.indexOf("=");
+      const cut = eq === -1 ? word : `${word.slice(0, eq)}=…`;
+      return cwd === undefined ? cut : cut.split(`${cwd}/`).join("");
+    }).join(" ").slice(0, 60);
+}
 export function pathSummary(path: string, cwd: string): string {
   if (!isAbsolute(path)) return path;
   const local = relative(cwd, path);

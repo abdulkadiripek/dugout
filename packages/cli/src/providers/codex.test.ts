@@ -16,6 +16,7 @@ it("replays implementation tools, messages and usage with the exact invocation",
   expect(result.durationMs).toBeGreaterThanOrEqual(0);
   expect(events).toContainEqual({ type: "provider.tool", attempt: 1, name: "edit", summary: "packages/core/src/probe.ts" });
   expect(events.filter(e => e.type === "provider.tool" && e.name === "command")).toHaveLength(2);
+  expect(events).toContainEqual({ type: "provider.tool", attempt: 1, name: "command", summary: "cat AGENTS.md" });
   expect(events.filter(e => e.type === "provider.message")).toHaveLength(2);
   expect(events.at(-1)).toEqual({ type: "provider.usage", attempt: 1, ...result.usage });
 });
@@ -42,7 +43,7 @@ it("bounds summaries, removes cwd, and hides outside absolute paths", async () =
     { type: "unknown" }, { type: "turn.completed" },
   ].map(event => JSON.stringify(event));
   const { events } = await collect(createCodexAdapter({ context, spawn: () => scripted(lines) }));
-  expect(events[0]).toMatchObject({ summary: `command ${"x".repeat(72)}` });
+  expect(events[0]).toMatchObject({ summary: `command ${"x".repeat(52)}` });
   expect(events[1]).toMatchObject({ summary: "a, (outside worktree), (outside worktree)" });
   expect(events[2]).toMatchObject({ summary: "x".repeat(200) });
   expect(events[3]).toMatchObject({ text: "x".repeat(500) });
