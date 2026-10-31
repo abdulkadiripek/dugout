@@ -68,4 +68,4 @@ Two logs are structurally equal when, after dropping all `provider.tool`, `provi
 
 ## Privacy
 
-Events must not contain secrets, file contents, prompts, or absolute home paths. Tool summaries are names and relative paths only. The log directory is outside the repo and never committed.
+Events must not contain secrets, file contents, prompts, or absolute home paths. The CLI enforces the last part: before a line is written, the event writer replaces the user's home directory (a path prefix match on `/`-boundaries) with `~` in every string value of the event, including `outputTail` and `provider.message` text (found while dogfooding: test runners print the working directory). Tool summaries are names and relative paths only. The log directory is outside the repo and never committed.
