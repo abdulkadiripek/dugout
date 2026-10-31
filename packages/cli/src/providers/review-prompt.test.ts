@@ -37,7 +37,7 @@ it("reads only the staged diff against the supplied base", async () => {
     await git("init");
     await writeFile(join(cwd, "file.txt"), "base\n");
     await git("add", ".");
-    await git("-c", "user.name=Test", "-c", "user.email=test@example.invalid", "-c", "commit.gpgsign=false", "commit", "-m", "base");
+    await git("-c", "user.name=t", "-c", "user.email=t@localhost", "-c", "commit.gpgsign=false", "commit", "-m", "base");
     await writeFile(join(cwd, "file.txt"), "staged\n");
     await git("add", ".");
     await writeFile(join(cwd, "file.txt"), "unstaged\n");
