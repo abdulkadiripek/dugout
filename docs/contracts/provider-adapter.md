@@ -48,14 +48,14 @@ interface ProviderAdapter {
 
 | Key | Default |
 |---|---|
-| `models.codex` | `gpt-6-astra` (implementation), `gpt-6.1-sol` (review) |
+| `models.codex` | `gpt-6.1-sol` (implementation and review; the larger `gpt-6-astra` used far more tokens in practice and is opt-in via config) |
 | `models.claude` | `claude-sonnet-5-5` (implementation and review) |
 | `models.fake` | `fake` |
 | `attemptTimeoutMs` | `600000` |
 
 Timeouts (`verifyTimeoutMs`, `attemptTimeoutMs`) must be integers from 1 to 2147483647 (the `setTimeout` limit); anything else is a config error.
 
-File shape: `{ "models": { "<provider>": { "implement": "...", "review": "..." } }, "verifyTimeoutMs": 600000 }`; every key is optional and overrides the default. `verifyTimeoutMs` (default `600000`) bounds the verify runner (see `cli.md`).
+File shape: `{ "models": { "<provider>": { "implement": "...", "review": "..." } }, "verifyTimeoutMs": 600000, "claude": { "allowedTools": ["Write", "Edit", "Read"] } }`; every key is optional and overrides the default. `claude.allowedTools` (default `["Write", "Edit", "Read"]`) is the list passed after `--allowedTools` to the Claude implementer; an empty list or a non-string item is a config error. Opt-in example for faster runs: add `"Bash(pnpm *)"` so the implementer can run the project's own tests. `verifyTimeoutMs` (default `600000`) bounds the verify runner (see `cli.md`).
 
 Model names live only in config and fixtures, never in logic. Timeouts end an attempt with `exitReason: "timeout"`.
 
@@ -80,6 +80,9 @@ Rule: a real adapter may only be written after one cheap approved call has been 
 - A read-only question that read ~10 docs took 15 turns, ~22 s, and ~190k total input tokens (mostly cache). `total_cost_usd` is an API-price estimate, not subscription usage.
 - Tools not in `--allowedTools` are denied and listed in `permission_denials` (the run still succeeds); the adapter should treat denials as a signal, not an error.
 - `usage.input_tokens` is tiny because of caching; token accounting for events must sum input + cache read + cache creation.
+
+### Observed 2026-10-31: Claude implementer and Bash permissions
+- With `--permission-mode acceptEdits --allowedTools Write Edit Read "Bash(echo *)"` (haiku, temp git dir): `echo` ran (the pattern allows it), and so did `ls` and `touch denied-marker.txt`, which are **not** in the list. `acceptEdits` auto-approves read-only and basic filesystem commands in the working directory. `permission_denials` stayed empty. In dogfood #1 a `pnpm ...` command with only `Write Edit Read` allowed was refused ("requires approval"). So extra `Bash(...)` patterns widen what an implementer can run; there is **no sandbox** on the Claude side, which is why the default list stays `Write Edit Read` and Bash is opt-in per user.
 
 ### Observed 2026-10-31: `claude -p` stream-json as implementer (sample: `fixtures/providers/claude/stream-json-implement.sample.jsonl`)
 - Prompt must come **before** the variadic flags (`--allowedTools`, `--tools`); otherwise the flag swallows it and the CLI exits 1 with "Input must be provided either through stdin or as a prompt argument". Close stdin.
