@@ -1,7 +1,8 @@
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { createServer } from "node:net";
-import { dirname, join } from "node:path";
+import { homedir } from "node:os";
+import { dirname, join, resolve as resolvePath } from "node:path";
 import { parseArgs } from "node:util";
 import { fileURLToPath } from "node:url";
 
@@ -15,6 +16,10 @@ const { values } = parseArgs({
     "api-port": { type: "string", default: "4317" },
     "web-port": { type: "string", default: "5173" },
     check: { type: "boolean", default: false },
+    live: { type: "boolean", default: false },
+    open: { type: "boolean", default: false },
+    "events-dir": { type: "string" },
+    repo: { type: "string" },
   },
   strict: true,
 });
@@ -63,6 +68,33 @@ async function waitFor(url, child, name, deadline) {
   throw new Error(`${name} did not answer at ${url} within 20 s`);
 }
 
+function gitRoot(cwd) {
+  try {
+    return execFileSync("git", ["rev-parse", "--show-toplevel"], { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+  } catch {
+    return cwd;
+  }
+}
+
+const home = homedir();
+const eventsDir = values["events-dir"]
+  ? resolvePath(values["events-dir"])
+  : values.live
+    ? join(home, ".dugout", "events")
+    : join(root, "fixtures/events");
+const repoDir = values.repo ? resolvePath(values.repo) : values.live ? gitRoot(process.cwd()) : root;
+const shownEvents = eventsDir === home || eventsDir.startsWith(home + "/") ? `~${eventsDir.slice(home.length)}` : eventsDir;
+
+function openBrowser(url) {
+  const opener = process.platform === "darwin" ? "open" : process.platform === "linux" ? "xdg-open" : null;
+  if (!opener) return;
+  try {
+    const child = spawn(opener, [url], { detached: true, stdio: "ignore" });
+    child.on("error", () => {});
+    child.unref();
+  } catch {}
+}
+
 const apiPort = await freePort(values["api-port"]);
 const webPort = await freePort(values["web-port"]);
 const apiUrl = `http://${HOST}:${apiPort}`;
@@ -89,7 +121,7 @@ async function stopAll() {
   })));
 }
 
-const api = start("api", process.execPath, [serverBin, "--port", String(apiPort), "--events-dir", join(root, "fixtures/events"), "--repo", root], { cwd: root });
+const api = start("api", process.execPath, [serverBin, "--port", String(apiPort), "--events-dir", eventsDir, "--repo", repoDir], { cwd: root });
 const web = start("web", viteBin, ["--host", HOST, "--port", String(webPort), "--strictPort"], {
   cwd: join(root, "packages/web"),
   env: { ...process.env, DUGOUT_API: apiUrl },
@@ -102,6 +134,9 @@ try {
   await waitFor(`${apiUrl}/api/tasks`, api, "api", deadline);
   await waitFor(webUrl, web, "web", deadline);
   process.stdout.write(`demo ready: ${webUrl}\n`);
+  if (values.live || values["events-dir"]) process.stdout.write(`events: ${shownEvents}\n`);
+  if (values.live) process.stdout.write("stop with Ctrl+C\n");
+  if (values.open && !values.check) openBrowser(webUrl);
   if (values.check) {
     const response = await fetch(`${webUrl}/api/tasks`);
     const body = await response.json();

@@ -1,5 +1,7 @@
 import { spawn, spawnSync } from "node:child_process";
+import { copyFileSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { createServer } from "node:net";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -41,6 +43,25 @@ describe("demo script", () => {
       expect(Number(ready[1])).not.toBe(busy);
     } finally {
       blocker.close();
+    }
+  }, 60000);
+
+  it("checks live mode against a given events dir, accepts --open without opening", () => {
+    const fixtures = join(dirname(script), "..", "fixtures/events");
+    const dir = mkdtempSync(join(tmpdir(), "dugout-live-"));
+    try {
+      const name = readdirSync(fixtures).find((f) => f.endsWith(".jsonl"));
+      copyFileSync(join(fixtures, name), join(dir, name));
+      const result = spawnSync("node", [script, "--live", "--open", "--events-dir", dir, "--api-port", "0", "--web-port", "0", "--check"], { encoding: "utf8", timeout: 55000 });
+      expect(result.status).toBe(0);
+      expect(result.stdout).toMatch(/^demo check ok: 1 tasks$/m);
+      expect(result.stdout).toContain(`events: ${dir}\n`);
+      expect(result.stdout).toContain("stop with Ctrl+C");
+      const pids = result.stdout.match(/^child pids: (\d+) (\d+)$/m)?.slice(1).map(Number);
+      expect(pids).toHaveLength(2);
+      for (const pid of pids) expect(alive(pid), `pid ${pid}`).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
     }
   }, 60000);
 });
