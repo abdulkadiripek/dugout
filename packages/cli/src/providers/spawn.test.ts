@@ -36,11 +36,14 @@ it("terminates a shell and its sleep descendant using only their process group",
     expect(pid).toBeGreaterThan(0);
     child.killGroup("SIGTERM");
     expect(await child.exited).toEqual({ code: null, signal: "SIGTERM" });
-    // Linux may retain a killed orphan as a zombie until the host reaps it.
-    let state = "";
-    try { state = await readFile(`/proc/${pid}/stat`, "utf8"); }
-    catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
-    expect(state === "" || state.split(") ")[1]?.startsWith("Z ")).toBe(true);
+    // The shell can report its exit before its descendant has handled SIGTERM, and Linux may keep a killed orphan as a zombie.
+    const gone = async () => {
+      try { return (await readFile(`/proc/${pid}/stat`, "utf8")).split(") ")[1]?.startsWith("Z ") === true; }
+      catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return true; throw error; }
+    };
+    const deadline = Date.now() + 3000;
+    while (!(await gone()) && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 25));
+    expect(await gone()).toBe(true);
   } finally { child.killGroup("SIGKILL"); }
 });
 it("escalates after two seconds even when a scripted process never exits", async () => {
