@@ -11,11 +11,11 @@ Bring-your-own-subscription: only official CLIs (`claude`, `codex`) run as child
 
 ## Status
 
-Stage 1 of 6 (scaffold + core, no real model calls). Current plan: `docs/plans/stage-1.md`. Stages and decisions: `docs/architecture.md`, `docs/adr/`.
+Stage 1 of 6 is implemented (scaffold + core with the `fake` provider, no real model calls in the product). Next: `docs/plans/stage-2.md`. Stages and decisions: `docs/architecture.md`, `docs/adr/`.
 
 ## Commands
 
-No code exists yet. Stage 1 creates the pnpm workspace; afterwards these must work from the repo root:
+These work from the repo root (`pnpm demo` arrives in Stage 4):
 
 ```
 pnpm install
