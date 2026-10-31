@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import type { ProviderName } from "@panosu/core";
+import type { ProviderName } from "@dugout/core";
 
 export interface Config {
   models: { implement: Record<ProviderName, string>; review: Record<ProviderName, string> };
@@ -27,7 +27,7 @@ function timeout(value: unknown, key: string): number {
   return value;
 }
 
-export function loadConfig(file = join(homedir(), ".ajan-panosu", "config.json")): Config {
+export function loadConfig(file = join(homedir(), ".dugout", "config.json")): Config {
   const config: Config = {
     models: {
       implement: { codex: "gpt-6.1-sol", claude: "claude-sonnet-5-5", fake: "fake" },

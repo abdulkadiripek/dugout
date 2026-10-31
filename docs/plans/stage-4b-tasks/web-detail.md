@@ -26,7 +26,7 @@ files_to_read:
 constraints:
   - "Do not edit shared files: packages/web/src/api.ts, router.ts, App.tsx, theme.ts, formatters.ts, styles/tokens.css, styles/base.css, existing components and screens other than the one this task owns, any package.json, root config or docs. Add new files instead; if you truly need a change to a shared file, stop and say so in your final message."
   - "React 19 and the already installed test libraries only; no new dependencies. Plain CSS in your own new stylesheet (imported by your screen file), reuse the design tokens (CSS custom properties) from tokens.css; inline SVG for graphics; no external resources or network calls other than the API client functions from api.ts."
-  - "The only import from @panosu/core is `import type`; never import @panosu/server or @panosu/cli (a test enforces this)."
+  - "The only import from @dugout/core is `import type`; never import @dugout/server or @dugout/cli (a test enforces this)."
   - "Accessibility: semantic markup, visible focus, status and severity never by color alone, keyboard operable (collapsibles are buttons with aria-expanded), readable at 390px and 1280px, text contrast AA. Light and dark themes come from the tokens."
   - "No any. No comments unless explaining a non-obvious why. TypeScript strict. Small components, one per file, named exports. Component tests live in `.test.tsx` files (JSX is allowed) with `// @vitest-environment jsdom` at the top; tests never touch the network (stub fetch or the api module)."
   - "Do not run any claude or codex command. You cannot open a browser: port the airy prototype faithfully and say what you could not verify visually."

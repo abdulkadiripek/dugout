@@ -181,7 +181,7 @@ importers:
 
   packages/cli:
     dependencies:
-      '@panosu/core':
+      '@dugout/core':
         specifier: workspace:*
         version: link:../core
 
@@ -199,7 +199,7 @@ importers:
       '@hono/node-server':
         specifier: ^2.1.5
         version: 2.1.5(hono@4.13.14)
-      '@panosu/core':
+      '@dugout/core':
         specifier: workspace:*
         version: link:../core
       hono:
@@ -215,7 +215,7 @@ importers:
         specifier: ^19.3.1
         version: 19.3.1(react@19.3.1)
     devDependencies:
-      '@panosu/core':
+      '@dugout/core':
         specifier: workspace:*
         version: link:../core
       '@testing-library/dom':

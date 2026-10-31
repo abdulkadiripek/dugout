@@ -31,7 +31,7 @@ it("uses the default 60000-byte content budget", () => {
   expect(buildReviewPrompt({ goal: "", acceptance: [], diff })).toContain("[diff truncated: 2 bytes omitted]");
 });
 it("reads only the staged diff against the supplied base", async () => {
-  const cwd = await mkdtemp(join(tmpdir(), "panosu-diff-"));
+  const cwd = await mkdtemp(join(tmpdir(), "dugout-diff-"));
   const git = (...args: string[]) => promisify(execFile)("git", args, { cwd });
   try {
     await git("init");

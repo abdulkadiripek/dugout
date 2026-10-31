@@ -1,6 +1,6 @@
 ---
 id: eval-harness
-goal: Implement `panosu eval` in packages/cli exactly as specified in the "eval" section of docs/contracts/cli.md, tested with fake providers and a scripted spawn that applies each task's reference solution.
+goal: Implement `dugout eval` in packages/cli exactly as specified in the "eval" section of docs/contracts/cli.md, tested with fake providers and a scripted spawn that applies each task's reference solution.
 files_to_read:
   - AGENTS.md
   - docs/contracts/cli.md
@@ -17,11 +17,11 @@ files_to_read:
 constraints:
   - Only add or edit files under packages/cli/src. Do not touch evals/, docs, package.json, lockfile, tsconfig or other packages. Existing behavior and every existing test must keep passing.
   - No new dependencies. No any. No comments unless explaining a non-obvious why. ESM NodeNext, relative imports end in .js.
-  - Tests never start claude or codex: use fake mode and an injected scripted SpawnFn. Temp dirs only under os.tmpdir(); never touch ~/.ajan-panosu, ~/.claude, ~/.codex or the repo you run in. Only signal processes the code under test spawned.
+  - Tests never start claude or codex: use fake mode and an injected scripted SpawnFn. Temp dirs only under os.tmpdir(); never touch ~/.dugout, ~/.claude, ~/.codex or the repo you run in. Only signal processes the code under test spawned.
   - Reuse delegate rather than duplicating it: add a narrow optional hook to delegate's options/deps for "files to overlay during verify" (the check/ directory) instead of copying delegate's body.
   - Do not run any claude or codex command.
 acceptance:
-  - `panosu eval` is wired in cli.ts with the flags and the quota guard of the contract (no --providers and no --scenario: exit 3, message mentions quota; nothing is created).
+  - `dugout eval` is wired in cli.ts with the flags and the quota guard of the contract (no --providers and no --scenario: exit 3, message mentions quota; nothing is created).
   - Task selection by number, name, directory name and `all` works; `all` skips directories without seed/ or check/ (tasks 04, 06, 08 today); an unknown task is exit 3.
   - Per task, a temp repo is created from seed/ and committed; the delegate flow runs with it; the printed lines and the `passed n/total` summary match the contract; temp dirs are removed unless --keep (then the path is printed with ~ substitution rules unchanged).
   - Hidden check overlay: the check/ files are present while verify runs and absent afterwards; they never appear in the task branch commit, the staged diff or diffStat; an overlay file that would overwrite an existing worktree file makes that task fail with a stderr message, without aborting the other tasks.

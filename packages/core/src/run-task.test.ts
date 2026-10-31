@@ -24,7 +24,7 @@ function setup(spec: FakeScenarioSpec) {
       review: { codex: "review-codex", claude: "review-claude", fake: "review-fake" },
     },
     emit: (event) => { events.push(event); },
-    worktree: { path: ".worktrees/test", branch: "panosu/test", baseRef: "main" },
+    worktree: { path: ".worktrees/test", branch: "dugout/test", baseRef: "main" },
     signal: new AbortController().signal,
   };
   const run = async (task: TaskPackage = pkg) => {

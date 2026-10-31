@@ -109,7 +109,7 @@ globalThis.Board = (() => {
 
   const setTheme = (theme) => {
     document.documentElement.dataset.theme = theme;
-    try { localStorage.setItem("panosu-proto-theme", theme); } catch { /* storage may be blocked */ }
+    try { localStorage.setItem("dugout-proto-theme", theme); } catch { /* storage may be blocked */ }
     syncToggle();
   };
   const effectiveTheme = () => document.documentElement.dataset.theme ||
@@ -134,7 +134,7 @@ globalThis.Board = (() => {
     } else if (r.name === "scorecard") { html = views.scorecard(DATA.scorecard); title = "Scorecard"; }
     else html = views.list();
     app.innerHTML = html;
-    document.title = title + " · Ajan Panosu";
+    document.title = title + " · Dugout";
     for (const a of document.querySelectorAll("[data-nav]")) {
       const on = (a.dataset.nav === "scorecard") === (r.name === "scorecard");
       if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
@@ -177,7 +177,7 @@ globalThis.Board = (() => {
   const start = (v) => {
     views = v;
     try {
-      const saved = localStorage.getItem("panosu-proto-theme");
+      const saved = localStorage.getItem("dugout-proto-theme");
       if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
     } catch { /* storage may be blocked */ }
     document.addEventListener("keydown", onKey);

@@ -1,6 +1,6 @@
 # Contract: event log
 
-One JSON object per line in `~/.ajan-panosu/events/<task-id>.jsonl`, appended in order. The board and the model scorecard are derived only from these files and from git diffs. Examples: `fixtures/events/*.jsonl`.
+One JSON object per line in `~/.dugout/events/<task-id>.jsonl`, appended in order. The board and the model scorecard are derived only from these files and from git diffs. Examples: `fixtures/events/*.jsonl`.
 
 ## Envelope (every event)
 

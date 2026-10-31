@@ -1,5 +1,5 @@
 {"schemaVersion":1,"seq":0,"ts":"2026-01-17T14:00:00.000Z","taskId":"add-retry-g7h8","type":"task.created","package":{"id":"add-retry","goal":"Add retry with backoff to the fetch helper.","files_to_read":["packages/core/src/fetch.ts"],"constraints":["Max 3 retries"],"acceptance":["Retries on 503 up to 3 times","Does not retry on 400"],"verify":"pnpm test","max_retries":1,"review":true,"providers":["codex","claude"]}}
-{"schemaVersion":1,"seq":1,"ts":"2026-01-17T14:00:01.000Z","taskId":"add-retry-g7h8","type":"worktree.created","path":".worktrees/add-retry-g7h8","branch":"panosu/add-retry-g7h8","baseRef":"main"}
+{"schemaVersion":1,"seq":1,"ts":"2026-01-17T14:00:01.000Z","taskId":"add-retry-g7h8","type":"worktree.created","path":".worktrees/add-retry-g7h8","branch":"dugout/add-retry-g7h8","baseRef":"main"}
 {"schemaVersion":1,"seq":2,"ts":"2026-01-17T14:00:02.000Z","taskId":"add-retry-g7h8","type":"attempt.started","attempt":1,"reason":"initial","provider":"codex","model":"gpt-6-astra"}
 {"schemaVersion":1,"seq":3,"ts":"2026-01-17T14:00:50.000Z","taskId":"add-retry-g7h8","type":"provider.tool","attempt":1,"name":"edit","summary":"packages/core/src/fetch.ts"}
 {"schemaVersion":1,"seq":4,"ts":"2026-01-17T14:01:10.000Z","taskId":"add-retry-g7h8","type":"provider.usage","attempt":1,"inputTokens":15800,"outputTokens":1900}

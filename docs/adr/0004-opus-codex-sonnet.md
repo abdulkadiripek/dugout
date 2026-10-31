@@ -6,7 +6,7 @@ Status: accepted (2026-10-31)
 The maintainer has a Claude Pro subscription (tight limits) and a Codex subscription. Most token cost is re-reading context on every call, so an expensive orchestrator doing implementation is wasteful.
 
 ## Decision
-Claude Opus is always the orchestrator and stays thin. Implementation goes to Codex (default `gpt-6-astra`) first. When the Codex adapter reports `rate_limit`, `auth` or `crash`, the next provider (Claude Sonnet) takes over. The other provider performs cross-review.
+Claude Opus is always the orchestrator and stays thin. Implementation goes to Codex first (default model: see ADR 0010). When the Codex adapter reports `rate_limit`, `auth` or `crash`, the next provider (Claude Sonnet) takes over. The other provider performs cross-review.
 
 ## Alternatives considered
 - Everything on Claude: simplest, exhausts the Pro limit fastest.

@@ -22,7 +22,7 @@ constraints:
   - Task 07 (rename-across-files): the check verifies the old name no longer appears in the two files (word-boundary search) and that behavior is unchanged.
   - Do not run any claude or codex command.
 acceptance:
-  - For each of the five tasks the directories seed/, check/ and solution/ exist and contain the files needed; task.md frontmatter parses with parseTaskPackage from @panosu/core and has the single-command verify.
+  - For each of the five tasks the directories seed/, check/ and solution/ exist and contain the files needed; task.md frontmatter parses with parseTaskPackage from @dugout/core and has the single-command verify.
   - evals.test.ts, for each task: copies seed into a temp dir, overlays check/, runs the task's verify command there with the existing runVerifyCommand and asserts it FAILS (exit code non-zero); then overlays solution/ and asserts it PASSES. Temp dirs under os.tmpdir() only, removed afterwards. The test discovers tasks by listing the runnable directories above (a constant list in the test), not by scanning evals/ (the pending tasks have no seed).
   - Everything runs offline in under 30 seconds in total on Node 24+. If the local Node cannot run the chosen test command, say exactly what failed instead of weakening the check.
 verify: pnpm lint && pnpm typecheck && pnpm test

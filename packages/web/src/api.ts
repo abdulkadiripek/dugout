@@ -1,4 +1,4 @@
-import type { Event, ImplementerRow, ReviewerRow, Scorecard, TaskStatus, TaskSummary } from "@panosu/core";
+import type { Event, ImplementerRow, ReviewerRow, Scorecard, TaskStatus, TaskSummary } from "@dugout/core";
 
 export type { Event, ImplementerRow, ReviewerRow, Scorecard, TaskStatus, TaskSummary };
 

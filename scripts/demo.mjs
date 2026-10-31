@@ -92,7 +92,7 @@ async function stopAll() {
 const api = start("api", process.execPath, [serverBin, "--port", String(apiPort), "--events-dir", join(root, "fixtures/events"), "--repo", root], { cwd: root });
 const web = start("web", viteBin, ["--host", HOST, "--port", String(webPort), "--strictPort"], {
   cwd: join(root, "packages/web"),
-  env: { ...process.env, PANOSU_API: apiUrl },
+  env: { ...process.env, DUGOUT_API: apiUrl },
 });
 process.stdout.write(`child pids: ${api.pid} ${web.pid}\n`);
 

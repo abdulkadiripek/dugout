@@ -7,7 +7,7 @@ import { commitAll, createWorktree, currentBase, diffStat, findRepoRoot, removeW
 
 let dir: string;
 let repo: string;
-const identity = ["-c", "user.name=panosu", "-c", "user.email=panosu@localhost"];
+const identity = ["-c", "user.name=dugout", "-c", "user.email=dugout@localhost"];
 function git(cwd: string, ...args: string[]): Promise<string> {
   return new Promise((resolve, reject) => {
     execFile("git", args, { cwd, encoding: "utf8" }, (error, stdout) => {
@@ -17,7 +17,7 @@ function git(cwd: string, ...args: string[]): Promise<string> {
   });
 }
 beforeEach(async () => {
-  dir = mkdtempSync(join(tmpdir(), "panosu-git-"));
+  dir = mkdtempSync(join(tmpdir(), "dugout-git-"));
   repo = join(dir, "repo");
   mkdirSync(repo);
   await git(repo, "init", "-b", "main");
@@ -32,7 +32,7 @@ it("creates an isolated worktree, stages, measures, commits and removes it while
   expect(await findRepoRoot(repo)).toBe(repo);
   expect(await currentBase(repo)).toBe("main");
   const tree = await createWorktree(repo, "task-1234", "main");
-  expect(tree).toEqual({ path: ".worktrees/task-1234", branch: "panosu/task-1234", baseRef: "main" });
+  expect(tree).toEqual({ path: ".worktrees/task-1234", branch: "dugout/task-1234", baseRef: "main" });
   const cwd = join(repo, tree.path);
   expect(await currentBase(cwd)).toBe(tree.branch);
   expect(await findRepoRoot(cwd)).toBe(cwd);
@@ -46,7 +46,7 @@ it("creates an isolated worktree, stages, measures, commits and removes it while
   expect(existsSync(join(repo, "new.txt"))).toBe(false);
   expect(await commitAll(cwd, "Implement task")).toBe(true);
   const head = await git(cwd, "rev-parse", "HEAD");
-  expect(await git(cwd, "log", "-1", "--format=%an <%ae>")).toBe("panosu <panosu@localhost>");
+  expect(await git(cwd, "log", "-1", "--format=%an <%ae>")).toBe("dugout <dugout@localhost>");
   expect(await commitAll(cwd, "No changes")).toBe(false);
   expect(await git(cwd, "rev-parse", "HEAD")).toBe(head);
   writeFileSync(join(cwd, "untracked.txt"), "discard\n");

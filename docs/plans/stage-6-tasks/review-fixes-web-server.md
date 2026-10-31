@@ -14,7 +14,7 @@ files_to_read:
   - "packages/server/src/server.test.ts"
 constraints:
   - "Only edit packages/web/src/screens/ListScreen.tsx, App.tsx, their tests, and packages/server/src/app.ts with its tests. Do not touch docs, other files, package.json or the lockfile. Existing tests must keep passing."
-  - "No new dependencies. No any. No comments unless explaining a non-obvious why. Do not run any claude or codex command. Your new tests must fail without your fix. Temp dirs only; never touch ~/.ajan-panosu, ~/.claude or ~/.codex."
+  - "No new dependencies. No any. No comments unless explaining a non-obvious why. Do not run any claude or codex command. Your new tests must fail without your fix. Temp dirs only; never touch ~/.dugout, ~/.claude or ~/.codex."
 acceptance:
   - "List keys: the Enter shortcut opens the first task only when focus is on the document body or the main landmark (not on a link, button, [role=button], input, select, textarea or any element inside the header or filters); j/k/arrows keep working from the body or a row. Tests with real keyboard events in jsdom: Enter on a focused filter button toggles the filter and does not navigate; Enter on the Scorecard nav link is not intercepted (default not prevented); Enter with focus on body still opens the first card."
   - "App renders DetailScreen with key={id} so state never carries over between task ids; test that navigating from one task id to another shows the loading state, not the previous task's goal, and that a collapsible opened on task A is closed on task B."

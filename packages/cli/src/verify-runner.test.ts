@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { runVerifyCommand } from "./verify-runner.js";
 
 let dir: string;
-beforeEach(() => { dir = mkdtempSync(join(tmpdir(), "panosu-verify-")); });
+beforeEach(() => { dir = mkdtempSync(join(tmpdir(), "dugout-verify-")); });
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
 it("passes in the supplied cwd and merges stderr in output order", async () => {

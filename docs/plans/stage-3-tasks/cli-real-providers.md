@@ -1,6 +1,6 @@
 ---
 id: cli-real-providers
-goal: Wire the real Codex and Claude adapters and the package setup step into `panosu delegate` as specified in docs/contracts/cli.md, tested end to end with a scripted spawn seam and never with real CLIs.
+goal: Wire the real Codex and Claude adapters and the package setup step into `dugout delegate` as specified in docs/contracts/cli.md, tested end to end with a scripted spawn seam and never with real CLIs.
 files_to_read:
   - AGENTS.md
   - docs/contracts/cli.md
@@ -25,7 +25,7 @@ files_to_read:
 constraints:
   - Only add or edit files under packages/cli/src. Do not touch package.json, lockfile, tsconfig, other packages, fixtures or docs. Existing behavior (fake mode, list, exit codes, signal handling) and every existing test must keep passing.
   - No new dependencies. No any. No comments unless explaining a non-obvious why. ESM NodeNext, relative imports end in .js.
-  - Tests must never start claude or codex. Inject a scripted SpawnFn through `deps`. Temp dirs only; never touch ~/.ajan-panosu, ~/.claude, ~/.codex or the repo you run in. Only signal processes the code under test spawned.
+  - Tests must never start claude or codex. Inject a scripted SpawnFn through `deps`. Temp dirs only; never touch ~/.dugout, ~/.claude, ~/.codex or the repo you run in. Only signal processes the code under test spawned.
   - Do not run any claude or codex command.
 acceptance:
   - main/delegate accept an optional `spawn?: SpawnFn` in their deps argument (default spawnReal) used by both adapters. Nothing else changes in the public signatures.

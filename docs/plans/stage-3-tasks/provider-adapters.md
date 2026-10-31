@@ -20,10 +20,10 @@ files_to_read:
   - packages/core/src/index.ts
 constraints:
   - Only add or edit files under packages/cli/src/providers, plus one line added to packages/cli/src/index.ts to export them. Do not touch package.json, lockfile, tsconfig, other packages, fixtures or docs.
-  - No new dependencies. Node built-ins and "@panosu/core" only. No any. No comments unless explaining a non-obvious why. ESM NodeNext, relative imports end in .js.
+  - No new dependencies. Node built-ins and "@dugout/core" only. No any. No comments unless explaining a non-obvious why. ESM NodeNext, relative imports end in .js.
   - Behavior must follow docs/contracts/provider-adapter.md exactly, including the observed command lines. Do not invent flags, event types or exit codes that are not in the contract or the samples. In particular rate_limit and auth are NOT detected in this stage: a failing run is `crash`; a rate_limit_event is ignored.
   - Spawned processes: stdin ignored, own process group (detached), only that group is ever signalled (SIGTERM, then SIGKILL after 2 s). Never use pkill or killall.
-  - Tests must not start claude or codex. They use the spawn seam with scripted processes built from the recorded samples, plus real child processes of `sh`/`node` only for the spawn-seam test itself. Temp dirs only under os.tmpdir(); never touch ~/.ajan-panosu, ~/.claude, ~/.codex or the repo you run in.
+  - Tests must not start claude or codex. They use the spawn seam with scripted processes built from the recorded samples, plus real child processes of `sh`/`node` only for the spawn-seam test itself. Temp dirs only under os.tmpdir(); never touch ~/.dugout, ~/.claude, ~/.codex or the repo you run in.
   - Do not run any claude or codex command.
 acceptance:
   - spawn.ts exports the seam: `SpawnedProcess = { lines: AsyncIterable<string>; stderr(): string; exited: Promise<{ code: number | null; signal: NodeJS.Signals | null }>; killGroup(signal: NodeJS.Signals): void }` and `SpawnFn = (command: string, args: string[], opts: { cwd: string }) => SpawnedProcess`, plus `spawnReal: SpawnFn` (child_process.spawn, detached, stdin ignored, stdout split into lines, stderr buffered up to 64 KB). A test with real `sh` processes covers: lines split correctly across chunks, exit code, stderr capture, and killGroup terminating a `sleep 30` and its child.

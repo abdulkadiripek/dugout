@@ -31,7 +31,7 @@ it("derives providers, attempts, branch and review from the fallback and review 
   const fallback = summarizeLog(linesOf("fallback.jsonl"), "x");
   expect(fallback.providers).toEqual(["codex", "claude"]);
   expect(fallback.attempts).toBe(2);
-  expect(fallback.branch).toBe("panosu/add-csv-export-e5f6");
+  expect(fallback.branch).toBe("dugout/add-csv-export-e5f6");
   expect(fallback.baseRef).toBe("main");
   expect(fallback.startedAt).toBe("2026-01-16T09:00:00.000Z");
   expect(fallback.durationMs).not.toBeNull();

@@ -17,7 +17,7 @@ export function App() {
   const key = route.name === "task" ? `task:${route.id}` : route.name;
 
   useEffect(() => {
-    document.title = `${route.name === "task" ? route.id : TITLES[route.name]} · Ajan Panosu`;
+    document.title = `${route.name === "task" ? route.id : TITLES[route.name]} · Dugout`;
     if (first.current) {
       first.current = false;
       return;
@@ -53,7 +53,7 @@ export function App() {
             <circle cx="18" cy="9" r="5" fill="var(--dot-needs_review)" />
             <circle cx="13" cy="18" r="5" fill="var(--accent)" />
           </svg>
-          Ajan Panosu
+          Dugout
         </div>
         <nav aria-label="Main">
           <a href="#/" aria-current={listCurrent ? "page" : undefined}>Tasks</a>

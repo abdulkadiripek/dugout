@@ -14,7 +14,7 @@ A developer who works with several coding agents under personal subscriptions hi
 ## Goals
 
 1. Orchestrator (Claude Opus) stays thin: it writes a task package and reads a short verdict.
-2. Implementation goes to the strongest available model first (Codex `gpt-6-astra`) and degrades gracefully to Claude Sonnet when the limit is reached.
+2. Implementation goes to the strongest available model first (Codex `gpt-6.1-sol` by default) and degrades gracefully to Claude Sonnet when the limit is reached.
 3. Every delegated task is verified by the task's own test command and cross-reviewed by the other provider before the orchestrator sees it.
 4. Every task leaves a complete, privacy-safe event log; a local web board shows tasks, attempts, diffs and a per-model scorecard.
 5. The repo is small, readable and public: a portfolio piece that teaches how such a system is built.
@@ -29,7 +29,7 @@ A developer who works with several coding agents under personal subscriptions hi
 
 ## Success criteria
 
-- A task package delegated with `panosu delegate` completes end-to-end with the `fake` provider in tests, including rate-limit fallback and verify retries.
+- A task package delegated with `dugout delegate` completes end-to-end with the `fake` provider in tests, including rate-limit fallback and verify retries.
 - Real Codex and Claude runs produce valid event logs (after Stage 3).
 - `pnpm demo` shows the board from fixtures with no model calls, on a fresh clone.
 - Model scorecard answers "which provider passes first try more often, at what retry and token cost" from the golden task set.

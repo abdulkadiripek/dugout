@@ -1,12 +1,12 @@
 {
-  "name": "@panosu/cli",
+  "name": "@dugout/cli",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "dependencies": {
-    "@panosu/core": "workspace:*"
+    "@dugout/core": "workspace:*"
   },
   "bin": {
-    "panosu": "dist/bin.js"
+    "dugout": "dist/bin.js"
   }
 }

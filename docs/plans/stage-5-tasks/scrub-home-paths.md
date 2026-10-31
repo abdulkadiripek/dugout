@@ -11,7 +11,7 @@ files_to_read:
 constraints:
   - "Only edit packages/cli/src (event-writer.ts, delegate.ts and their tests, plus tests for the wiring). Do not touch core, docs, package.json, lockfile or tsconfig. Every existing test must keep passing."
   - "No new dependencies. No any. No comments unless explaining a non-obvious why. ESM NodeNext, relative imports end in .js."
-  - "Do not run any claude or codex command. Temp dirs only; never touch ~/.ajan-panosu, ~/.claude or ~/.codex."
+  - "Do not run any claude or codex command. Temp dirs only; never touch ~/.dugout, ~/.claude or ~/.codex."
 acceptance:
   - "createEventWriter(dir, taskId, opts?: { homedir?: string }) scrubs every string value (recursively through objects and arrays, including the embedded package object, outputTail and message text) so that the home directory prefix is replaced by `~`. A match requires a path boundary: `/hm/ab` is replaced inside `/hm/ab/x` and at the end of a string, but not inside `/hm/abc/x`. An empty or `/` homedir scrubs nothing. Scrubbing happens after schema validation and before the line is written; the object passed to emit() is not mutated."
   - "When opts.homedir is omitted the writer uses os.homedir()."

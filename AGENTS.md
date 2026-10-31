@@ -1,8 +1,8 @@
-# Ajan Panosu (agent-board)
+# Dugout (agent-board)
 
 A small, local TypeScript tool that lets one orchestrator agent (Claude Opus) hand coding tasks to other agents and shows what happened.
 
-- **Delegate:** `panosu delegate task.md` runs a task package in its own git worktree. Order: Codex (`gpt-6-astra`) first; if Codex hits its limit, fall back to Claude Sonnet.
+- **Delegate:** `dugout delegate task.md` runs a task package in its own git worktree. Order: Codex (default `gpt-6.1-sol`) first; if Codex hits its limit, fall back to Claude Sonnet.
 - **Verify:** the task's `verify` command runs after every attempt; failures are fed back to the same provider up to `max_retries`.
 - **Cross-review:** the other provider reviews the diff and returns structured JSON.
 - **Observe:** a web board (retrospective first) reads the event log and git diffs; it never controls anything in v1.
@@ -11,7 +11,7 @@ Bring-your-own-subscription: only official CLIs (`claude`, `codex`) run as child
 
 ## Status
 
-Stages 1-4 of 6 are implemented: core, `panosu delegate` / `list` / `eval`, real Codex and Claude adapters, the read-only API, and the React board (`pnpm demo`). Stage 5 (dogfood) is under way; Stage 6 (portfolio polish) waits for the maintainer's license, name and remote decisions. Stages and decisions: `docs/architecture.md`, `docs/adr/`.
+Stages 1-4 of 6 are implemented: core, `dugout delegate` / `list` / `eval`, real Codex and Claude adapters, the read-only API, and the React board (`pnpm demo`). Stage 5 (dogfood) is under way; Stage 6 (portfolio polish) waits for the maintainer's license, name and remote decisions. Stages and decisions: `docs/architecture.md`, `docs/adr/`.
 
 ## Commands
 
@@ -32,13 +32,13 @@ Runtime: Node + pnpm (installed). `tmux` and `bun` are not installed and not req
 
 ```
 packages/core    # schemas (zod), adapter interface, fallback, verify loop. Depends on nothing else here.
-packages/cli     # `panosu` command. Depends on core.
+packages/cli     # `dugout` command. Depends on core.
 packages/server  # Hono API, read-only. Depends on core.
 packages/web     # React + Vite UI. Talks to server over HTTP only; never imports server or cli. May `import type` from core.
 ```
 
 - `core` has no I/O side effects at import time and does not spawn processes directly; spawning lives behind the adapter interface.
-- The event log is the single source of truth for the board: `~/.ajan-panosu/events/<task-id>.jsonl` (outside the repo). Never read `~/.claude/projects/**` or `~/.codex/**` transcripts for board data.
+- The event log is the single source of truth for the board: `~/.dugout/events/<task-id>.jsonl` (outside the repo). Never read `~/.claude/projects/**` or `~/.codex/**` transcripts for board data.
 
 ## Hard rules
 

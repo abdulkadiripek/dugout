@@ -7,4 +7,4 @@ Nothing here has been done automatically. The tool never pushes, never rewrites 
 3. **Local-only files.** Confirm `git check-ignore CLAUDE.local.md .proje` prints both, and `git ls-files | grep -E "^(\.proje|CLAUDE\.local)"` prints nothing.
 4. **CI.** `.github/workflows/ci.yml` has never run on GitHub. After the first push, check the run (lint, typecheck, test, build, repo scan). Node 22 in CI; the golden evals need Node 24 locally.
 5. **Remote.** `git remote add origin <url>` and push only after the steps above. Adding a remote and pushing is an outward-facing action.
-6. **Quota-dependent checks (optional).** When Codex quota is available, run one small real task through `panosu delegate` with both providers to see a successful Codex-first run and a live approve review, and `panosu eval 01 --providers codex,claude` to see the golden task flow with a real model.
+6. **Quota-dependent checks (optional).** When Codex quota is available, run one small real task through `dugout delegate` with both providers to see a successful Codex-first run and a live approve review, and `dugout eval 01 --providers codex,claude` to see the golden task flow with a real model.

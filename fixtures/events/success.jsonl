@@ -1,5 +1,5 @@
 {"schemaVersion":1,"seq":0,"ts":"2026-01-15T10:00:00.000Z","taskId":"add-slugify-a1b2","type":"task.created","package":{"id":"add-slugify","goal":"Add a slugify helper.","files_to_read":["packages/core/src/text.ts"],"constraints":["No new dependencies"],"acceptance":["slugify('Hello World') returns 'hello-world'"],"verify":"pnpm test","max_retries":2,"review":true,"providers":["codex","claude"]}}
-{"schemaVersion":1,"seq":1,"ts":"2026-01-15T10:00:01.000Z","taskId":"add-slugify-a1b2","type":"worktree.created","path":".worktrees/add-slugify-a1b2","branch":"panosu/add-slugify-a1b2","baseRef":"main"}
+{"schemaVersion":1,"seq":1,"ts":"2026-01-15T10:00:01.000Z","taskId":"add-slugify-a1b2","type":"worktree.created","path":".worktrees/add-slugify-a1b2","branch":"dugout/add-slugify-a1b2","baseRef":"main"}
 {"schemaVersion":1,"seq":2,"ts":"2026-01-15T10:00:02.000Z","taskId":"add-slugify-a1b2","type":"attempt.started","attempt":1,"reason":"initial","provider":"codex","model":"gpt-6-astra"}
 {"schemaVersion":1,"seq":3,"ts":"2026-01-15T10:00:20.000Z","taskId":"add-slugify-a1b2","type":"provider.tool","attempt":1,"name":"edit","summary":"packages/core/src/text.ts"}
 {"schemaVersion":1,"seq":4,"ts":"2026-01-15T10:00:41.000Z","taskId":"add-slugify-a1b2","type":"provider.tool","attempt":1,"name":"edit","summary":"packages/core/src/text.test.ts"}

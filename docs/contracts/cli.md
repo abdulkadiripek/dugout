@@ -1,20 +1,20 @@
-# Contract: `panosu` CLI
+# Contract: `dugout` CLI
 
 The orchestrator calls this through its shell (ADR 0002). Behavior lives in `packages/cli`; orchestration logic lives in `core` (`runTask`).
 
 ## Commands
 
 ```
-panosu delegate <task.md> [--providers <list>] [--scenario <name>] [--events-dir <dir>] [--repo <dir>]
-panosu list [--events-dir <dir>] [--limit <n>]
-panosu eval <task|all> (--providers <list> | --scenario <name>) [--events-dir <dir>] [--evals-dir <dir>] [--keep]
+dugout delegate <task.md> [--providers <list>] [--scenario <name>] [--events-dir <dir>] [--repo <dir>]
+dugout list [--events-dir <dir>] [--limit <n>]
+dugout eval <task|all> (--providers <list> | --scenario <name>) [--events-dir <dir>] [--evals-dir <dir>] [--keep]
 ```
 
 | Flag | Meaning | Default |
 |---|---|---|
 | `--providers` | Comma list overriding `providers` of the package: `codex`, `claude` or `fake`. `fake` cannot be mixed with the others. | the package's list |
 | `--scenario` | Fake mode: every provider of the package is replaced by a scripted `fake` adapter following this scenario: `success`, `fallback`, `review-issues`, `all-failed`. | none |
-| `--events-dir` | Where event logs are written and read. | `~/.ajan-panosu/events` |
+| `--events-dir` | Where event logs are written and read. | `~/.dugout/events` |
 | `--repo` | Repository to create the worktree in. | the git root of the current directory |
 | `--limit` | Number of tasks `list` prints, newest first. | `20` |
 
@@ -26,11 +26,11 @@ Scenarios script only the adapters (exit reasons and the review verdict); **`ver
 
 1. Read and validate the package with `parseTaskPackage`. On failure: print a readable error naming the field, exit 3, write no log and create no worktree.
 2. `baseRef` = the current branch name of the repo (the commit hash if HEAD is detached); events record this name. The CLI also resolves it to a commit hash once at the start and uses the **hash** for every diff it computes or hands to a reviewer (`diffStat`, review prompt), so a base branch that advances during the run cannot change the diff. Uncommitted changes in the main working tree are not part of the worktree; say nothing about them.
-3. Task id = `<package id>-<4 hex chars>`. Make sure `.worktrees/` is listed in the repo's `info/exclude` (never touch tracked files or `.gitignore`). Create the worktree `.worktrees/<task-id>` on branch `panosu/<task-id>` from `baseRef`. `worktree.path` in events stays repo-relative; the CLI resolves it against the repo root before giving a `cwd` to adapters or the verify runner.
+3. Task id = `<package id>-<4 hex chars>`. Make sure `.worktrees/` is listed in the repo's `info/exclude` (never touch tracked files or `.gitignore`). Create the worktree `.worktrees/<task-id>` on branch `dugout/<task-id>` from `baseRef`. `worktree.path` in events stays repo-relative; the CLI resolves it against the repo root before giving a `cwd` to adapters or the verify runner.
 4. If the package has `setup`, `runTask` runs it once in the worktree through the same runner as `verify` (same timeout) before the first attempt; a failing setup ends the task `failed` with zero attempts (see `events.md`).
 5. Call `runTask` (see `events.md`), appending each event to `<events-dir>/<task-id>.jsonl` as it is emitted.
 6. Before every `verify`, stage everything in the worktree (`git add -A`) so the diff against `baseRef` includes new files. `diffStat` is computed from `git diff --cached --numstat <baseRef>`.
-7. After `task.finished`, if anything is staged, commit it on the task branch with a fixed identity (`panosu <panosu@localhost>`), message `panosu: <task id>`, `--no-verify` and `commit.gpgsign=false` (the repo's hooks and signing must not run or block). The result block is printed before the commit; a commit failure only prints a warning on stderr and never changes the exit code. The worktree is left in place. Merging is never done by the CLI.
+7. After `task.finished`, if anything is staged, commit it on the task branch with a fixed identity (`dugout <dugout@localhost>`), message `dugout: <task id>`, `--no-verify` and `commit.gpgsign=false` (the repo's hooks and signing must not run or block). The result block is printed before the commit; a commit failure only prints a warning on stderr and never changes the exit code. The worktree is left in place. Merging is never done by the CLI.
 
 ## Verify runner
 
@@ -69,7 +69,7 @@ One line per task, newest first: `<task-id>  <status>  <attempts> attempts  <pro
 
 ## Config
 
-`~/.ajan-panosu/config.json` is optional and read-only for the CLI. Keys and defaults are in `provider-adapter.md`. A missing file means defaults; an invalid file is exit 3 with a readable error.
+`~/.dugout/config.json` is optional and read-only for the CLI. Keys and defaults are in `provider-adapter.md`. A missing file means defaults; an invalid file is exit 3 with a readable error.
 
 ## `eval`
 
@@ -77,7 +77,7 @@ Runs golden tasks (`evals/README.md`) through the normal `delegate` flow.
 
 - `<task>` is a number (`01`), a name (`slugify`) or a directory name (`01-slugify`); `all` runs every task directory that has `seed/` and `check/`. An unknown task is exit 3. `--evals-dir` defaults to `evals/tasks` under the repo root of the current directory.
 - **Quota guard:** `eval` has no default provider. Without `--providers` or `--scenario` it exits 3 with a message that real runs spend subscription quota.
-- For each task: create a temp directory under `os.tmpdir()`, `git init -b main`, copy `seed/`, commit with the fixed `panosu` identity, then run the `delegate` steps with that directory as the repo and the task's `task.md` as the package.
+- For each task: create a temp directory under `os.tmpdir()`, `git init -b main`, copy `seed/`, commit with the fixed `dugout` identity, then run the `delegate` steps with that directory as the repo and the task's `task.md` as the package.
 - Hidden checks: after the worktree is staged for `verify`, the files of `check/` are copied into the worktree, `verify` runs, and the copied files are removed again before anything is staged or committed, so the reviewer, the diff and the task branch never contain them. A check file that would overwrite an existing file in the worktree is an error for that task (status `failed`); the path goes to stderr only, and the verify output the model sees says generically that a reserved path collided (hidden check names are never shown to the model).
 - The temp directory is removed after each task unless `--keep` is given (then its path is printed).
 - Output: one line per task `<dir-name>  <status>  <attempts> attempts  <providers>`, then `passed <n>/<total>`. Exit code 0 when the run completed (tasks may have failed), 3 for usage errors, 130 when interrupted.

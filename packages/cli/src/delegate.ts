@@ -3,7 +3,7 @@ import { randomBytes } from "node:crypto";
 import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, rmdirSync } from "node:fs";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { promisify } from "node:util";
-import { createFakeScenario, parseTaskPackage, runTask, type Event, type ProviderAdapter, type ProviderName, type TaskPackage, type VerifyOutcome } from "@panosu/core";
+import { createFakeScenario, parseTaskPackage, runTask, type Event, type ProviderAdapter, type ProviderName, type TaskPackage, type VerifyOutcome } from "@dugout/core";
 import type { IO, Deps } from "./cli.js";
 import type { Config } from "./config.js";
 import { createEventWriter } from "./event-writer.js";
@@ -158,7 +158,7 @@ export async function delegate(options: Options, io: IO, config: Config, deps: D
     });
     check();
     report(events, writer.path, io);
-    try { await commitAll(cwd, `panosu: ${taskId}`); } catch (error) {
+    try { await commitAll(cwd, `dugout: ${taskId}`); } catch (error) {
       io.stderr(`warning: could not commit the task branch: ${error instanceof Error ? error.message : String(error)}\n`);
     }
     return { passed: 0, needs_review: 1, failed: 2 }[result.status];

@@ -1,5 +1,5 @@
 {
-  "name": "@panosu/web",
+  "name": "@dugout/web",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -14,7 +14,7 @@
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
-    "@panosu/core": "workspace:*",
+    "@dugout/core": "workspace:*",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
     "@types/react": "^19.3.0",

@@ -1,7 +1,7 @@
 # Stage 3 plan: real adapters, review, eval harness
 
 ## Goal
-`panosu delegate task.md` (without `--scenario`) runs Codex first and Claude Sonnet as fallback against a real worktree, then cross-reviews with the other provider. Every provider behavior used is observed first; everything else stays labeled unverified. An eval harness can run the golden tasks, with fake providers in tests.
+`dugout delegate task.md` (without `--scenario`) runs Codex first and Claude Sonnet as fallback against a real worktree, then cross-reviews with the other provider. Every provider behavior used is observed first; everything else stays labeled unverified. An eval harness can run the golden tasks, with fake providers in tests.
 
 ## Prerequisite
 Stages 1-2 merged. Authorization: the maintainer approved self-approved continuation for all stages on 2026-10-31, including the cheap observation calls below. Rule 1 still holds: cheapest model, one turn, no loops.
@@ -26,8 +26,8 @@ Stages 1-2 merged. Authorization: the maintainer approved self-approved continua
 3. **Core changes** (Codex task): setup seam, review-failure handling, schema + fixtures for `setup.finished`.
 4. **Adapters** (Codex task): `codex.ts`, `claude.ts`, review prompt builder, process-group kill on timeout/abort, usage mapping, tests replaying the recorded samples.
 5. **CLI wiring** (Codex task): real providers when no fake mode; `setup` run through the verify runner; config models.
-6. **Eval seeds and hidden checks** for the 8 golden tasks (Codex task), then **`panosu eval`** (Codex task) running the same flow in fake mode in tests.
-7. **One live smoke**: a trivial task through `panosu delegate` with the cheapest models (2 calls). Not part of the test suite.
+6. **Eval seeds and hidden checks** for the 8 golden tasks (Codex task), then **`dugout eval`** (Codex task) running the same flow in fake mode in tests.
+7. **One live smoke**: a trivial task through `dugout delegate` with the cheapest models (2 calls). Not part of the test suite.
 
 ## Acceptance
 - Adapter tests replay recorded samples: tool, message and usage events mapped; `ok`, `crash`, `invalid_output`, `timeout` produced as specified; a timeout kills the whole process group.

@@ -1,6 +1,6 @@
 import { lstat, readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
-import { parseLog, summarizeEvents, type Event, type TaskSummary } from "@panosu/core";
+import { parseLog, summarizeEvents, type Event, type TaskSummary } from "@dugout/core";
 
 const ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/;
 const SUFFIX = ".jsonl";

@@ -1,6 +1,6 @@
 # Contract: task package
 
-The only thing an implementer agent receives from the orchestrator. The implementer never sees the orchestrator's conversation, so the package must be self-sufficient. Validated by a zod schema in `packages/core` (source of truth once it exists); `panosu delegate` refuses to start if validation fails.
+The only thing an implementer agent receives from the orchestrator. The implementer never sees the orchestrator's conversation, so the package must be self-sufficient. Validated by a zod schema in `packages/core` (source of truth once it exists); `dugout delegate` refuses to start if validation fails.
 
 A task package is a Markdown file: YAML frontmatter + optional free-form body.
 

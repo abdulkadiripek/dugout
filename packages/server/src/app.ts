@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { computeScorecard, taskStatusSchema, type Event } from "@panosu/core";
+import { computeScorecard, taskStatusSchema, type Event } from "@dugout/core";
 import { gitDiff } from "./diff.js";
 import { isValidTaskId, readAllLogs, readLog } from "./logs.js";
 

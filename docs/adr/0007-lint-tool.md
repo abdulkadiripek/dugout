@@ -7,7 +7,7 @@ ADR 0001 left the lint tool open (oxlint vs eslint). Package boundaries from `AG
 
 ## Decision
 Use oxlint with `.oxlintrc.json` at the repo root. Boundaries are enforced in two layers:
-- Imports by package name: `no-restricted-imports` per package via `overrides` (checked: `@panosu/cli` in `core` and `@panosu/server` in `web` fail lint).
+- Imports by package name: `no-restricted-imports` per package via `overrides` (checked: `@dugout/cli` in `core` and `@dugout/server` in `web` fail lint).
 - Relative imports out of a package: each package sets `rootDir: src` with `composite`, so `tsc -b` fails with TS6059/TS6307 (checked with a temporary file).
 
 Relative-path patterns in the lint rule were tried and dropped: they did not match multi-segment paths and would also forbid legitimate imports inside a package.

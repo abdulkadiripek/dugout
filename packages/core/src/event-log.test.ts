@@ -84,7 +84,7 @@ it("reports an empty log", () => {
 });
 
 const worktree = eventSchema.parse({
-  ...envelope, seq: 1, type: "worktree.created", path: ".worktrees/task-ab12", branch: "panosu/task-ab12", baseRef: "main",
+  ...envelope, seq: 1, type: "worktree.created", path: ".worktrees/task-ab12", branch: "dugout/task-ab12", baseRef: "main",
 });
 const setupFinished = eventSchema.parse({
   ...envelope, seq: 2, type: "setup.finished", passed: false, exitCode: 1, durationMs: 10, outputTail: "Failed",

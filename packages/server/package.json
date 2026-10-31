@@ -1,14 +1,14 @@
 {
-  "name": "@panosu/server",
+  "name": "@dugout/server",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "dependencies": {
     "@hono/node-server": "^2.1.5",
-    "@panosu/core": "workspace:*",
+    "@dugout/core": "workspace:*",
     "hono": "^4.13.14"
   },
   "bin": {
-    "panosu-serve": "dist/bin.js"
+    "dugout-serve": "dist/bin.js"
   }
 }

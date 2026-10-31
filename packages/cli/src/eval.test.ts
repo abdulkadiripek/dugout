@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cpSync, existsSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { basename, join } from "node:path";
-import { checkEventLog } from "@panosu/core";
+import { checkEventLog } from "@dugout/core";
 import { git, invoke, readEvents, setup } from "./test-helpers.js";
 import { sample, scripted } from "./providers/test-helper.js";
 import type { SpawnFn } from "./providers/index.js";

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { checkEventLog } from "@panosu/core";
+import { checkEventLog } from "@dugout/core";
 import { git, invoke, packageFile, readEvents, setup } from "./test-helpers.js";
 import { sample, scripted } from "./providers/test-helper.js";
 import { reviewJsonSchema } from "./providers/review-prompt.js";
@@ -66,7 +66,7 @@ it.each([false, true])("implements with Codex and cross-reviews with Claude (set
   expect(log).toContainEqual(expect.objectContaining({ type: "review.finished", provider: "claude" }));
   const cwd = join(ctx.repo, ".worktrees/task-abcd");
   expect(await git(cwd, "show", "HEAD:model-result")).toBe("model-private-content");
-  expect(await git(cwd, "branch", "--show-current")).toBe("panosu/task-abcd");
+  expect(await git(cwd, "branch", "--show-current")).toBe("dugout/task-abcd");
   expect(await git(ctx.repo, "status", "--porcelain")).toBe("");
   expect(existsSync(join(ctx.repo, "model-result"))).toBe(false);
   expect(spawn.mock.calls).toEqual([
@@ -161,8 +161,8 @@ it.each([["--scenario", "success"], ["--providers", "fake"]])("keeps fake mode i
 });
 
 it("passes claude.allowedTools from config to the spawned Claude argv", async () => {
-  mkdirSync(join(ctx.dir, ".ajan-panosu"), { recursive: true });
-  writeFileSync(join(ctx.dir, ".ajan-panosu", "config.json"), JSON.stringify({ claude: { allowedTools: ["Write", "Bash(pnpm *)"] } }));
+  mkdirSync(join(ctx.dir, ".dugout"), { recursive: true });
+  writeFileSync(join(ctx.dir, ".dugout", "config.json"), JSON.stringify({ claude: { allowedTools: ["Write", "Bash(pnpm *)"] } }));
   packageFile(ctx.file, { verify: "test -f model-result" });
   const spawn = await replay([
     { fixture: "claude/stream-json-implement.sample.jsonl", implement: true },

@@ -44,7 +44,7 @@ interface ProviderAdapter {
 | `crash` | Non-zero exit or killed unexpectedly | fallback |
 | `invalid_output` | Output unparsable | counts as failed attempt |
 
-## Configuration (defaults; overridable in `~/.ajan-panosu/config.json`)
+## Configuration (defaults; overridable in `~/.dugout/config.json`)
 
 | Key | Default |
 |---|---|
@@ -100,7 +100,7 @@ Rule: a real adapter may only be written after one cheap approved call has been 
 - The model returned `verdict: "changes_requested"` with only a `minor` issue, contradicting the verdict rule of `review-result.md`. Adapters therefore **derive the verdict from the issues** (see `review-result.md`).
 
 ### Observed 2026-10-31: full pipeline, live (log: `fixtures/events/real-codex-claude.jsonl`)
-`panosu delegate` with `providers: [codex, claude]`, Codex `gpt-6-luna` as implementer (`workspace-write`, in a git worktree) and `claude-haiku-5-5` as reviewer: one attempt, real verify passed, review `approve`, ~12 s total, 36.5k Codex input tokens reported. Still **unobserved**: any real `rate_limit` or `auth` failure from either CLI, a Codex `command` summary is the raw `bash -lc "..."` wrapper (cosmetic).
+`dugout delegate` with `providers: [codex, claude]`, Codex `gpt-6-luna` as implementer (`workspace-write`, in a git worktree) and `claude-haiku-5-5` as reviewer: one attempt, real verify passed, review `approve`, ~12 s total, 36.5k Codex input tokens reported. Still **unobserved**: any real `rate_limit` or `auth` failure from either CLI, a Codex `command` summary is the raw `bash -lc "..."` wrapper (cosmetic).
 
 ### Observed 2026-10-31: Codex usage limit (sample: `fixtures/providers/codex/exec-json-usage-limit.sample.jsonl`)
 - A real `codex exec --json` run in the middle of a task (after several `command_execution` items, 16 events) stopped with an `error` event and a `turn.failed` event carrying the same message: `You’ve hit your usage limit. Upgrade to Pro (...), visit ... to purchase more credits or try again at <local time>.` (typographic apostrophe). No `turn.completed`, no `-o` file, **exit code 1**. The sample keeps only the four non-tool events and masks the time.

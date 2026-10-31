@@ -14,7 +14,7 @@ it.each([[], ["unknown"], ["delegate"], ["delegate", "a", "b"], ["list", "extra"
   expect(result.stderr).not.toBe("");
 });
 it("reports invalid config", async () => {
-  mkdirSync(join(ctx.dir, ".ajan-panosu"));
-  writeFileSync(join(ctx.dir, ".ajan-panosu/config.json"), "{");
+  mkdirSync(join(ctx.dir, ".dugout"));
+  writeFileSync(join(ctx.dir, ".dugout/config.json"), "{");
   expect((await invoke(ctx, ["list"])).stderr).toContain("config: invalid JSON");
 });

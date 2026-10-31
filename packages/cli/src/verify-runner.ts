@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import type { VerifyOutcome } from "@panosu/core";
+import type { VerifyOutcome } from "@dugout/core";
 
 export interface VerifyOptions {
   timeoutMs: number;
@@ -13,7 +13,7 @@ export function runVerifyCommand(cwd: string, command: string, opts: VerifyOptio
   }
   return new Promise((resolve, reject) => {
     // Redirect before executing the command so both streams share one ordered pipe.
-    const child = spawn("sh", ["-c", 'exec 2>&1; exec sh -c "$1"', "panosu-verify", command], {
+    const child = spawn("sh", ["-c", 'exec 2>&1; exec sh -c "$1"', "dugout-verify", command], {
       cwd, detached: true, stdio: ["ignore", "pipe", "pipe"],
     });
     let tail = "";

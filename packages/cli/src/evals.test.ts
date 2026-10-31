@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { cpSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { parseTaskPackage } from "@panosu/core";
+import { parseTaskPackage } from "@dugout/core";
 import { runVerifyCommand } from "./verify-runner.js";
 
 const tasksDir = join(import.meta.dirname, "../../../evals/tasks");
@@ -26,7 +26,7 @@ describe.each(RUNNABLE)("eval task %s", (name) => {
   });
 
   it("fails on the seed and passes with the solution", async () => {
-    const work = mkdtempSync(join(tmpdir(), "panosu-eval-"));
+    const work = mkdtempSync(join(tmpdir(), "dugout-eval-"));
     made.push(work);
     cpSync(join(taskDir, "seed"), work, { recursive: true });
     cpSync(join(taskDir, "check"), work, { recursive: true });

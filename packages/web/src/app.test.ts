@@ -150,7 +150,7 @@ describe("theme toggle", () => {
     fireEvent.click(btn);
     const first = document.documentElement.dataset.theme;
     expect(first === "light" || first === "dark").toBe(true);
-    expect(window.localStorage.getItem("panosu-theme")).toBe(first);
+    expect(window.localStorage.getItem("dugout-theme")).toBe(first);
     fireEvent.click(btn);
     expect(document.documentElement.dataset.theme).not.toBe(first);
     await screen.findByText("No tasks yet.");

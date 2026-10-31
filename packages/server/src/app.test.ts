@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   computeScorecard, eventSchema, parseLog, scorecardSchema, taskSummarySchema, type Event,
-} from "@panosu/core";
+} from "@dugout/core";
 import { createApp } from "./app.js";
 import { commitOnBranch, fixture, setup, writeLog } from "./test-helpers.js";
 
@@ -137,7 +137,7 @@ describe("GET /api/tasks/:id", () => {
 describe("GET /api/tasks/:id/diff", () => {
   async function withBranch(mutate: (text: string) => string = (text) => text) {
     const ctx = await setup();
-    await commitOnBranch(ctx.repo, "panosu/add-slugify-a1b2", "new.txt", "hello\n");
+    await commitOnBranch(ctx.repo, "dugout/add-slugify-a1b2", "new.txt", "hello\n");
     writeLog(ctx.events, "good", mutate(fixture("success")));
     return { ctx, app: createApp({ eventsDir: ctx.events, repo: ctx.repo }) };
   }
@@ -154,7 +154,7 @@ describe("GET /api/tasks/:id/diff", () => {
   it("truncates on a line boundary with a marker", async () => {
     const ctx = await setup();
     const content = Array.from({ length: 30000 }, (_, i) => `line ${i}`).join("\n") + "\n";
-    await commitOnBranch(ctx.repo, "panosu/add-slugify-a1b2", "big.txt", content);
+    await commitOnBranch(ctx.repo, "dugout/add-slugify-a1b2", "big.txt", content);
     writeLog(ctx.events, "good", fixture("success"));
     const app = createApp({ eventsDir: ctx.events, repo: ctx.repo });
     const result = diffSchema.parse((await get(app, "/api/tasks/good/diff")).body);
@@ -176,7 +176,7 @@ describe("GET /api/tasks/:id/diff", () => {
     expect((await get(app, "/api/tasks/nobranch/diff")).status).toBe(404);
     const refs = ["--output=evil", "-x", "a..b", "a b", "x;y", "", "a@{1}"];
     for (const [index, ref] of refs.entries()) {
-      writeLog(ctx.events, `badbranch${index}`, fixture("success").replace("panosu/add-slugify-a1b2", ref));
+      writeLog(ctx.events, `badbranch${index}`, fixture("success").replace("dugout/add-slugify-a1b2", ref));
       writeLog(ctx.events, `badbase${index}`, fixture("success").replace('"baseRef":"main"', `"baseRef":"${ref}"`));
       expect((await get(app, `/api/tasks/badbranch${index}/diff`)).status, ref).toBe(404);
       expect((await get(app, `/api/tasks/badbase${index}/diff`)).status, ref).toBe(404);

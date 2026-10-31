@@ -1,8 +1,8 @@
 import { readFile } from "node:fs/promises";
-import type { AttemptInput, ProviderAdapter, ProviderEvent } from "@panosu/core";
+import type { AttemptInput, ProviderAdapter, ProviderEvent } from "@dugout/core";
 import type { SpawnedProcess } from "./spawn.js";
 
-export const input: AttemptInput = { taskId: "test", attempt: 1, cwd: "/tmp/panosu-worktree", prompt: "implement exactly", model: "test-model", signal: new AbortController().signal };
+export const input: AttemptInput = { taskId: "test", attempt: 1, cwd: "/tmp/dugout-worktree", prompt: "implement exactly", model: "test-model", signal: new AbortController().signal };
 export const context = () => ({ goal: "Test goal", acceptance: ["First criterion", "Second criterion"] });
 export const reviewInput = { ...input, baseRef: "HEAD" };
 export async function sample(path: string): Promise<string[]> {

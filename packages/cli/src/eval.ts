@@ -31,12 +31,12 @@ function select(evalsDir: string, selector: string): string[] {
 }
 
 async function seedRepo(seed: string): Promise<string> {
-  const repo = mkdtempSync(join(tmpdir(), "panosu-eval-"));
+  const repo = mkdtempSync(join(tmpdir(), "dugout-eval-"));
   try {
     cpSync(seed, repo, { recursive: true });
     await exec("git", ["init", "-b", "main"], { cwd: repo });
     await exec("git", ["add", "-A"], { cwd: repo });
-    await exec("git", ["-c", "user.name=panosu", "-c", "user.email=panosu@localhost", "commit", "-m", "seed"], { cwd: repo });
+    await exec("git", ["-c", "user.name=dugout", "-c", "user.email=dugout@localhost", "commit", "-m", "seed"], { cwd: repo });
   } catch (error) {
     rmSync(repo, { recursive: true, force: true });
     throw error;

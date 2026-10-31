@@ -1,7 +1,7 @@
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { normalizeReview, type ProviderAdapter, type AttemptResult } from "@panosu/core";
+import { normalizeReview, type ProviderAdapter, type AttemptResult } from "@dugout/core";
 import { spawnReal, processLines } from "./spawn.js";
 import { buildReviewPrompt, defaultGetDiff, reviewJsonSchema } from "./review-prompt.js";
 import { object, parseLine, number, pathSummary, shellSummary, type AdapterOptions } from "./shared.js";
@@ -66,7 +66,7 @@ export function createCodexAdapter(opts: AdapterOptions): ProviderAdapter {
       try {
         const diff = await (opts.getDiff ?? defaultGetDiff)(input.cwd, input.baseRef);
         const prompt = buildReviewPrompt({ ...opts.context(), diff });
-        dir = await mkdtemp(join(tmpdir(), "panosu-review-"));
+        dir = await mkdtemp(join(tmpdir(), "dugout-review-"));
         const schema = join(dir, "schema.json");
         await writeFile(schema, JSON.stringify(reviewJsonSchema));
         const child = spawn("codex", [...args(input.model, input.cwd, "read-only"), "--skip-git-repo-check", "--ephemeral", "--output-schema", schema, "-o", join(dir, "output.json"), prompt], { cwd: input.cwd });

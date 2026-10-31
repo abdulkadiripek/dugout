@@ -6,7 +6,7 @@ import { spawnReal, processLines } from "./spawn.js";
 import { scripted } from "./test-helper.js";
 
 let cwd: string;
-beforeEach(async () => { cwd = await mkdtemp(join(tmpdir(), "panosu-spawn-")); });
+beforeEach(async () => { cwd = await mkdtemp(join(tmpdir(), "dugout-spawn-")); });
 afterEach(async () => { vi.useRealTimers(); await rm(cwd, { recursive: true, force: true }); });
 it("splits chunks and CRLF, retains a final partial line, captures stderr and exit", async () => {
   const child = spawnReal("sh", ["-c", "printf 'one'; sleep 0.02; printf '\\ntwo\\r\\nlast'; printf 'failure' >&2; exit 7"], { cwd });

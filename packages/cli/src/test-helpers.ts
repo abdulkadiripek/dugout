@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
-import { eventSchema, type TaskPackage } from "@panosu/core";
+import { eventSchema, type TaskPackage } from "@dugout/core";
 import { main, type Deps } from "./cli.js";
 
 const exec = promisify(execFile);
@@ -11,7 +11,7 @@ export async function git(cwd: string, ...args: string[]): Promise<string> {
   return (await exec("git", args, { cwd })).stdout.trim();
 }
 export async function setup() {
-  const dir = mkdtempSync(join(tmpdir(), "panosu-cli-"));
+  const dir = mkdtempSync(join(tmpdir(), "dugout-cli-"));
   const repo = join(dir, "repo");
   mkdirSync(repo);
   await git(repo, "init", "-b", "main");

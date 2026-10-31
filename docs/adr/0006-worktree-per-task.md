@@ -6,7 +6,7 @@ Status: accepted (2026-10-31)
 Implementers edit files. Running them in the main working tree risks clobbering the maintainer's work and makes diffs and rollback unclear.
 
 ## Decision
-Each task runs in `.worktrees/<task-id>` on branch `panosu/<task-id>`, created from a recorded base ref. Verify and review run there. The diff against the base ref is the unit of review. Worktrees are removed on request, never automatically.
+Each task runs in `.worktrees/<task-id>` on branch `dugout/<task-id>`, created from a recorded base ref. Verify and review run there. The diff against the base ref is the unit of review. Worktrees are removed on request, never automatically.
 
 ## Alternatives considered
 - Edit in place with git stash: fragile, no isolation between parallel tasks.

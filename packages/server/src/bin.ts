@@ -14,7 +14,7 @@ function gitRoot(cwd: string): Promise<string> {
 }
 
 function usageError(message: string): never {
-  process.stderr.write(`panosu-serve: ${message}\n`);
+  process.stderr.write(`dugout-serve: ${message}\n`);
   process.exit(3);
 }
 
@@ -39,7 +39,7 @@ if (!(port >= 0 && port <= 65535)) usageError(`invalid --port: ${values.port}`);
 
 const server = await startServer({
   port,
-  eventsDir: values["events-dir"] ?? join(homedir(), ".ajan-panosu", "events"),
+  eventsDir: values["events-dir"] ?? join(homedir(), ".dugout", "events"),
   repo: values.repo ?? (await gitRoot(process.cwd())),
 });
 process.stdout.write(`listening on http://${server.address.host}:${server.address.port}\n`);

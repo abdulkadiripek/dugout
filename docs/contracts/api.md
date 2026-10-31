@@ -1,6 +1,6 @@
 # Contract: board API (read-only)
 
-Served by `packages/server` (command `panosu-serve [--port 4317] [--events-dir <dir>] [--repo <dir>]`; the `cli` package does not depend on `server`), bound to `127.0.0.1` only. The API is derived solely from the event log directory and `git`. It never writes, never reads `~/.claude/**` or `~/.codex/**`, and never spawns anything except `git` for diffs. Payload schemas are zod in `packages/core`.
+Served by `packages/server` (command `dugout-serve [--port 4317] [--events-dir <dir>] [--repo <dir>]`; the `cli` package does not depend on `server`), bound to `127.0.0.1` only. The API is derived solely from the event log directory and `git`. It never writes, never reads `~/.claude/**` or `~/.codex/**`, and never spawns anything except `git` for diffs. Payload schemas are zod in `packages/core`.
 
 ## Routes
 
@@ -20,7 +20,7 @@ Errors are JSON `{ "error": string }`: `400` for an invalid id or query (an id m
 
 `{ taskId, packageId, goal, status, reason?, providers, attempts, startedAt, durationMs, tokens: { input, output }, review: null | { verdict, counts: { blocker, major, minor, nit } }, branch, baseRef }`
 
-- `status`: `passed | needs_review | failed | interrupted | unreadable`. Same derivation as `panosu list` (`cli.md`): `task.finished.status` when present, `interrupted` when the log is valid but has no `task.finished`, `unreadable` (with `reason`) when a line fails to parse, `schemaVersion` is unknown or `seq` is not contiguous.
+- `status`: `passed | needs_review | failed | interrupted | unreadable`. Same derivation as `dugout list` (`cli.md`): `task.finished.status` when present, `interrupted` when the log is valid but has no `task.finished`, `unreadable` (with `reason`) when a line fails to parse, `schemaVersion` is unknown or `seq` is not contiguous.
 - `providers`: distinct implementer providers in order of first use. `attempts`: count of `attempt.started`. `durationMs`: `task.finished.durationMs`, `null` for interrupted. `tokens`: sum of `provider.usage` over all attempts. `review`: from the last `review.finished`, else `null`. `branch` / `baseRef` from `worktree.created`.
 - For an unreadable log only `taskId` (the file name), `status`, `reason` are meaningful; other fields are neutral (`""`, `[]`, `0`, `null`).
 

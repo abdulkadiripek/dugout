@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { summarizeLog } from "@panosu/core";
+import { summarizeLog } from "@dugout/core";
 import type { IO } from "./cli.js";
 
 export function list(dir: string, limit: number, io: IO): number {

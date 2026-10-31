@@ -15,7 +15,7 @@ Runnable tasks use only Node built-ins (`node --test` with TypeScript type strip
 
 Status: tasks 01, 02, 03, 05, 07 are runnable. 04 (needs `tsc` inside the seed), 06 (needs React and network) and 08 (the ambiguity report cannot be checked automatically) are **pending**; their `task.md` files are drafts.
 
-`panosu eval <task|all>` (see `docs/contracts/cli.md`) runs the tasks through the normal delegate flow in a temp repo per task.
+`dugout eval <task|all>` (see `docs/contracts/cli.md`) runs the tasks through the normal delegate flow in a temp repo per task.
 
 ## Tasks
 

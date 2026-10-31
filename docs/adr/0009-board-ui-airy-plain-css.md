@@ -8,7 +8,7 @@ The maintainer chose between two prototypes (dense developer tool vs airy visual
 ## Decision
 - Direction: airy (`docs/design/prototypes/templates/airy.html` is the source of truth for tokens and layout).
 - React 19 + Vite, plain CSS built on custom properties for light and dark; inline SVG for charts; a built-in unified-diff renderer. No Tailwind, no component or chart library.
-- `packages/web` talks to the server only over HTTP (`docs/contracts/api.md`) and may only `import type` from `@panosu/core` (a test enforces it). Per-screen CSS uses scoped class names.
+- `packages/web` talks to the server only over HTTP (`docs/contracts/api.md`) and may only `import type` from `@dugout/core` (a test enforces it). Per-screen CSS uses scoped class names.
 - Tests: vitest with jsdom and Testing Library; `pnpm demo` serves the fixture logs through the read-only API.
 
 ## Alternatives considered

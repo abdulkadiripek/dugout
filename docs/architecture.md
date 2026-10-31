@@ -4,9 +4,9 @@
 
 ```
 Orchestrator (Claude Opus session)
-   │  writes task.md (task package), calls: panosu delegate task.md
+   │  writes task.md (task package), calls: dugout delegate task.md
    ▼
-panosu CLI ── create git worktree ── .worktrees/<task-id>
+dugout CLI ── create git worktree ── .worktrees/<task-id>
    │
    ├─ attempt loop
    │    provider adapter (codex → claude → fake)  ── rate_limit/auth/crash → next provider
@@ -14,7 +14,7 @@ panosu CLI ── create git worktree ── .worktrees/<task-id>
    │
    ├─ cross-review by the *other* provider → review result JSON
    │
-   └─ append events → ~/.ajan-panosu/events/<task-id>.jsonl
+   └─ append events → ~/.dugout/events/<task-id>.jsonl
                                   │
 Board: Hono API (read-only) ──────┘  + git diff of the worktree
    └─ React UI: task list · task detail · model scorecard
@@ -27,7 +27,7 @@ The orchestrator receives only: final `status`, attempts, providers used, review
 | Package | Responsibility | May depend on |
 |---|---|---|
 | `packages/core` | zod schemas (event, task package, review), adapter interface, fallback chain, verify/retry loop, scorecard math | nothing in the repo |
-| `packages/cli` | `panosu delegate`, `panosu list`, worktree handling, log writing | core |
+| `packages/cli` | `dugout delegate`, `dugout list`, worktree handling, log writing | core |
 | `packages/server` | read-only Hono API over the event logs and git | core |
 | `packages/web` | React + Vite UI | server over HTTP only; `import type` from core is allowed (types only, no runtime import) |
 
@@ -41,7 +41,7 @@ See `docs/adr/`: TypeScript monorepo (0001), CLI delegation (0002), own event fo
 
 1. Scaffold + core with `fake` provider. Done.
 2. CLI: delegate, worktree, verify loop, event writing, end-to-end with `fake`. Done.
-3. Real adapters (Claude, Codex), cross-review, `panosu eval` with five runnable golden tasks. Done (real rate-limit and review-unavailable paths observed live).
+3. Real adapters (Claude, Codex), cross-review, `dugout eval` with five runnable golden tasks. Done (real rate-limit and review-unavailable paths observed live).
 4. Board: read-only API, scorecard math, React UI, `pnpm demo`. Done.
 5. Orchestrator integration: `docs/orchestrator-guide.md`, dogfood on this repo. Two real runs done; a successful Codex-first run with a live cross-review awaits Codex quota.
 6. Portfolio polish: README and screenshots done, secret scan in CI done. Open and owned by the maintainer: license, repository name, public remote, git history cleanup (`docs/release-checklist.md`).
@@ -49,7 +49,7 @@ See `docs/adr/`: TypeScript monorepo (0001), CLI delegation (0002), own event fo
 
 ## Storage
 
-- Events: `~/.ajan-panosu/events/<task-id>.jsonl` (append-only, outside the repo).
+- Events: `~/.dugout/events/<task-id>.jsonl` (append-only, outside the repo).
 - Worktrees: `.worktrees/<task-id>` (git-ignored); removed on request, not automatically.
 - No database in v1. The scorecard is computed by scanning logs.
 

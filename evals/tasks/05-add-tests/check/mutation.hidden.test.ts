@@ -16,7 +16,7 @@ function runTests(dir: string) {
 }
 
 function stage(stats: string): string {
-  const dir = mkdtempSync(join(tmpdir(), "panosu-mutant-"));
+  const dir = mkdtempSync(join(tmpdir(), "dugout-mutant-"));
   writeFileSync(join(dir, "package.json"), '{"type":"module"}\n');
   mkdirSync(join(dir, "src"));
   copyFileSync(stats, join(dir, "src", "stats.ts"));

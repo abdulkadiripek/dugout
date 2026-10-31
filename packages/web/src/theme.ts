@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 export type Theme = "light" | "dark";
 
-const KEY = "panosu-theme";
+const KEY = "dugout-theme";
 
 function readSaved(): Theme | null {
   try {

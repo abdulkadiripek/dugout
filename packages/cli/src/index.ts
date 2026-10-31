@@ -4,7 +4,7 @@ export { createEventWriter } from "./event-writer.js";
 export type { EventWriter } from "./event-writer.js";
 export { runVerifyCommand } from "./verify-runner.js";
 export type { VerifyOptions } from "./verify-runner.js";
-export type { VerifyOutcome } from "@panosu/core";
+export type { VerifyOutcome } from "@dugout/core";
 export { findRepoRoot, currentBase, createWorktree, removeWorktree, stageAll, diffStat, commitAll } from "./worktree.js";
 export type { Worktree, DiffStat } from "./worktree.js";
 export { main } from "./cli.js";

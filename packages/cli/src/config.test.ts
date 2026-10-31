@@ -6,7 +6,7 @@ import { ConfigError, loadConfig } from "./config.js";
 
 let dir: string;
 let file: string;
-beforeEach(() => { dir = mkdtempSync(join(tmpdir(), "panosu-config-")); file = join(dir, "config.json"); });
+beforeEach(() => { dir = mkdtempSync(join(tmpdir(), "dugout-config-")); file = join(dir, "config.json"); });
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
 describe("loadConfig", () => {

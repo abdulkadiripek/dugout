@@ -1,4 +1,4 @@
-import { normalizeReview, type ProviderAdapter, type AttemptResult } from "@panosu/core";
+import { normalizeReview, type ProviderAdapter, type AttemptResult } from "@dugout/core";
 import { spawnReal, processLines } from "./spawn.js";
 import { buildReviewPrompt, defaultGetDiff, reviewJsonSchema } from "./review-prompt.js";
 import { object, parseLine, number, pathSummary, shellSummary, type AdapterOptions } from "./shared.js";

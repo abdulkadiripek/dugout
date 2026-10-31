@@ -14,7 +14,7 @@ export const fixture = (name: string): string =>
   readFileSync(new URL(`../../../fixtures/events/${name}.jsonl`, import.meta.url), "utf8");
 
 export async function setup() {
-  const dir = mkdtempSync(join(tmpdir(), "panosu-server-"));
+  const dir = mkdtempSync(join(tmpdir(), "dugout-server-"));
   const repo = join(dir, "repo");
   const events = join(dir, "events");
   mkdirSync(repo);

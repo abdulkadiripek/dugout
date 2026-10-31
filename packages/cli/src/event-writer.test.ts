@@ -2,11 +2,11 @@ import { afterEach, beforeEach, expect, it } from "vitest";
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
-import { eventSchema, type Event } from "@panosu/core";
+import { eventSchema, type Event } from "@dugout/core";
 import { createEventWriter } from "./event-writer.js";
 
 let dir: string;
-beforeEach(() => { dir = mkdtempSync(join(tmpdir(), "panosu-events-")); });
+beforeEach(() => { dir = mkdtempSync(join(tmpdir(), "dugout-events-")); });
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 const event: Event = {
   schemaVersion: 1, seq: 0, ts: "2026-10-31T00:00:00Z", taskId: "test-1234",

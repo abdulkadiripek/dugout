@@ -112,8 +112,8 @@ export function ListScreen() {
         <div className="empty">
           <p><b>No tasks yet.</b></p>
           <p>
-            The board reads event logs written by <span className="mono">panosu delegate</span> to{" "}
-            <span className="mono">~/.ajan-panosu/events/</span>.
+            The board reads event logs written by <span className="mono">dugout delegate</span> to{" "}
+            <span className="mono">~/.dugout/events/</span>.
           </p>
           <p>To look around without running anything, start the server with fixture data using <span className="mono">pnpm demo</span>.</p>
         </div>

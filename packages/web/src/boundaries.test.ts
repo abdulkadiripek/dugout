@@ -16,8 +16,8 @@ describe("package boundaries", () => {
   it("imports core only as types and never imports server or cli", () => {
     for (const file of sources(root)) {
       for (const line of readFileSync(file, "utf8").split("\n")) {
-        if (/from\s+["']@panosu\/(server|cli)["']/.test(line)) throw new Error(`${file}: ${line.trim()}`);
-        if (/from\s+["']@panosu\/core["']/.test(line)) expect(line, file).toMatch(/^\s*(import|export)\s+type\b/);
+        if (/from\s+["']@dugout\/(server|cli)["']/.test(line)) throw new Error(`${file}: ${line.trim()}`);
+        if (/from\s+["']@dugout\/core["']/.test(line)) expect(line, file).toMatch(/^\s*(import|export)\s+type\b/);
       }
     }
   });

@@ -1,4 +1,4 @@
-import type { FakeOutcome, FakeScenarioSpec, ProviderName } from "@panosu/core";
+import type { FakeOutcome, FakeScenarioSpec, ProviderName } from "@dugout/core";
 
 export const scenarioNames = ["success", "fallback", "review-issues", "all-failed"] as const;
 

@@ -1,7 +1,7 @@
 import { appendFileSync, closeSync, mkdirSync, openSync } from "node:fs";
 import { homedir as osHomedir } from "node:os";
 import { join } from "node:path";
-import { eventSchema, type Event } from "@panosu/core";
+import { eventSchema, type Event } from "@dugout/core";
 
 export interface EventWriter {
   path: string;
