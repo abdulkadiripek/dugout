@@ -37,7 +37,7 @@ A task package is a Markdown file with YAML frontmatter: the goal, files to read
 
 ## Quick start
 
-Requirements: Node 22+ (Node 24+ to run the golden evals), pnpm, and the `claude` and/or `codex` CLIs logged in for real runs.
+Requirements: Node 24+, pnpm, and the `claude` and/or `codex` CLIs logged in for real runs.
 
 ```
 pnpm install

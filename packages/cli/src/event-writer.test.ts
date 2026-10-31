@@ -42,7 +42,7 @@ it("writes nothing for invalid events", () => {
 const fixtures = new URL("../../../fixtures/events/", import.meta.url);
 it.each(readdirSync(fixtures).filter(name => name.endsWith(".jsonl")))("round-trips fixture %s", name => {
   const lines: unknown[] = readFileSync(new URL(name, fixtures), "utf8").trim().split("\n").map(line => JSON.parse(line) as unknown);
-  const writer = createEventWriter(dir, name.replace(".jsonl", ""));
+  const writer = createEventWriter(dir, name.replace(".jsonl", ""), { homedir: "/dugout-test-no-such-home" });
   for (const line of lines) writer.emit(eventSchema.parse(line));
   expect(readFileSync(writer.path, "utf8").trim().split("\n").map(line => JSON.parse(line) as unknown)).toEqual(lines);
 });

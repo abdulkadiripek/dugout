@@ -39,7 +39,7 @@ it("terminates a shell and its sleep descendant using only their process group",
     // The shell can report its exit before its descendant has handled SIGTERM, and Linux may keep a killed orphan as a zombie.
     const gone = async () => {
       try { return (await readFile(`/proc/${pid}/stat`, "utf8")).split(") ")[1]?.startsWith("Z ") === true; }
-      catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return true; throw error; }
+      catch (error) { if (["ENOENT", "ESRCH"].includes((error as NodeJS.ErrnoException).code ?? "")) return true; throw error; }
     };
     const deadline = Date.now() + 3000;
     while (!(await gone()) && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 25));
