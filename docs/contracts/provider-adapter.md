@@ -71,7 +71,7 @@ A scenario is a list of per-attempt outcomes per provider slot, e.g. `[{exit:"ra
 | `codex` (implement) | `codex exec --json -m <m> -s workspace-write -C <cwd> "<prompt>" < /dev/null` | **Yes** (several calls in a worktree). Limit/auth failure shapes unknown. |
 | `codex` (review) | `codex exec --json -m <m> -s read-only -C <cwd> --skip-git-repo-check --ephemeral --output-schema <file> -o <out> "<prompt>" < /dev/null` | **Yes** (one call). |
 
-Rule: a real adapter may only be written after one cheap approved call has been observed and a sanitized sample saved to `fixtures/providers/<provider>/`. Rate-limit detection stays "unknown" until a real limit is seen; until then it is implemented only for `fake`.
+Rule: a real adapter may only be written after one cheap approved call has been observed and a sanitized sample saved to `fixtures/providers/<provider>/`. Rate-limit detection is implemented only for failure shapes that were actually observed: Codex's usage limit (below) is; Claude's and every `auth` failure are not, and surface as `crash` (which also falls back).
 
 ### Observed: `claude -p --output-format json` (sample: `fixtures/providers/claude/print-json.sample.json`)
 - Single JSON object, exit 0. Useful keys: `type: "result"`, `subtype` (`success`), `is_error`, `stop_reason`, `terminal_reason`, `result` (only the **last** assistant message), `num_turns`, `duration_ms`, `total_cost_usd`, `usage` (`input_tokens`, `cache_read_input_tokens`, `cache_creation_input_tokens`, `output_tokens`), `modelUsage` (per model), `permission_denials[]`, `session_id`.
@@ -96,6 +96,11 @@ Rule: a real adapter may only be written after one cheap approved call has been 
 
 ### Observed 2026-10-31: full pipeline, live (log: `fixtures/events/real-codex-claude.jsonl`)
 `panosu delegate` with `providers: [codex, claude]`, Codex `gpt-6-luna` as implementer (`workspace-write`, in a git worktree) and `claude-haiku-5-5` as reviewer: one attempt, real verify passed, review `approve`, ~12 s total, 36.5k Codex input tokens reported. Still **unobserved**: any real `rate_limit` or `auth` failure from either CLI, a Codex `command` summary is the raw `bash -lc "..."` wrapper (cosmetic).
+
+### Observed 2026-10-31: Codex usage limit (sample: `fixtures/providers/codex/exec-json-usage-limit.sample.jsonl`)
+- A real `codex exec --json` run in the middle of a task (after several `command_execution` items, 16 events) stopped with an `error` event and a `turn.failed` event carrying the same message: `You’ve hit your usage limit. Upgrade to Pro (...), visit ... to purchase more credits or try again at <local time>.` (typographic apostrophe). No `turn.completed`, no `-o` file, **exit code 1**. The sample keeps only the four non-tool events and masks the time.
+- Mapping: a Codex run whose `error` or `turn.failed` message contains `usage limit` (case-insensitive) ends with `exitReason: "rate_limit"`. Any other failure stays `crash`. The reset time in the message is not parsed.
+- The limit blocked the whole Codex subscription for hours; the orchestrator's fallback to Claude (ADR 0004) applies.
 
 ### Observed: `codex exec --json` (sample: `fixtures/providers/codex/exec-json.sample.jsonl`)
 - JSONL events seen: `thread.started` (`thread_id`), `turn.started`, `item.completed` (`item.type: "agent_message"`, `item.text`), `turn.completed` (`usage`: `input_tokens`, `cached_input_tokens`, `cache_write_input_tokens`, `output_tokens`, `reasoning_output_tokens`). Tool-call item types were not seen (the model made no tool calls).
