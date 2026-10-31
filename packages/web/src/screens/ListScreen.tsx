@@ -37,6 +37,7 @@ function useListKeys() {
       const target = ev.target instanceof HTMLElement ? ev.target : null;
       const tag = target?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      const onBodyOrMain = !target || target === document.body || target.id === "app";
       const list = rows();
       if (list.length === 0) return;
       const i = document.activeElement instanceof HTMLElement ? list.indexOf(document.activeElement) : -1;
@@ -46,7 +47,7 @@ function useListKeys() {
       } else if (ev.key === "k" || ev.key === "ArrowUp") {
         list[Math.max(i - 1, 0)]?.focus();
         ev.preventDefault();
-      } else if (ev.key === "Enter" && i < 0) {
+      } else if (ev.key === "Enter" && i < 0 && onBodyOrMain) {
         list[0]?.click();
         ev.preventDefault();
       }

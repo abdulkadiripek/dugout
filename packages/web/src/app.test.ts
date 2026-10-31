@@ -103,6 +103,26 @@ describe("ListScreen", () => {
     await screen.findByText("Esc");
   });
 
+  it("Enter on a focused control or nav link is left alone; Enter on body opens the first card", async () => {
+    stubTasks(TASKS);
+    render(h(App));
+    await screen.findByText("Passing goal");
+    const filter = screen.getByRole("button", { name: "Failed 1" });
+    filter.focus();
+    const pressed = fireEvent.keyDown(filter, { key: "Enter" });
+    expect(pressed).toBe(true);
+    expect(window.location.hash).toBe("");
+    fireEvent.click(filter);
+    expect(filter.getAttribute("aria-pressed")).toBe("true");
+    const nav = screen.getByRole("link", { name: "Scorecard" });
+    nav.focus();
+    expect(fireEvent.keyDown(nav, { key: "Enter" })).toBe(true);
+    expect(window.location.hash).toBe("");
+    (document.activeElement as HTMLElement | null)?.blur();
+    expect(fireEvent.keyDown(document.body, { key: "Enter" })).toBe(false);
+    await waitFor(() => expect(window.location.hash).toBe("#/tasks/t-fail"));
+  });
+
   it("Escape goes back to the list and unknown hashes show not-found", async () => {
     stubTasks(TASKS);
     window.location.hash = "#/nowhere";

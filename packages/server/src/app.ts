@@ -10,9 +10,16 @@ export interface AppOptions {
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 500;
+const ALLOWED_HOST = /^(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$/i;
 
 export function createApp({ eventsDir, repo }: AppOptions): Hono {
   const app = new Hono();
+
+  app.use("*", async (c, next) => {
+    const host = c.req.header("host") ?? new URL(c.req.url).host;
+    if (!ALLOWED_HOST.test(host)) return c.json({ error: "forbidden host" }, 403);
+    await next();
+  });
 
   app.get("/api/health", (c) => c.json({ ok: true }));
 

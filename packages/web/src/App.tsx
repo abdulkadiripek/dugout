@@ -63,7 +63,7 @@ export function App() {
       </header>
       <main id="app" tabIndex={-1} ref={mainRef}>
         {route.name === "list" ? <ListScreen /> : null}
-        {route.name === "task" ? <DetailScreen id={route.id} /> : null}
+        {route.name === "task" ? <DetailScreen key={route.id} id={route.id} /> : null}
         {route.name === "scorecard" ? <ScorecardScreen /> : null}
         {route.name === "not-found" ? <NotFoundScreen hash={route.hash} /> : null}
       </main>

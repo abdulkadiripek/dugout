@@ -212,3 +212,22 @@ describe("GET /api/scorecard", () => {
     expect(expected.implementers.length).toBeGreaterThan(0);
   });
 });
+
+describe("Host check", () => {
+  const status = async (host?: string) => {
+    const ctx = await setup();
+    const app = createApp({ eventsDir: ctx.events, repo: ctx.repo });
+    const response = await app.request("/api/health", host === undefined ? {} : { headers: { host } });
+    return { status: response.status, body: (await response.json()) as unknown };
+  };
+
+  it.each(["127.0.0.1", "127.0.0.1:5173", "localhost", "LOCALHOST:8080", "[::1]", "[::1]:3000"])("allows %s", async (host) => {
+    expect((await status(host)).status).toBe(200);
+  });
+
+  it.each(["evil.example", "127.0.0.1.evil.example", "localhost.evil.example", "evil.example:80", ""])(
+    "rejects %j", async (host) => {
+      expect(await status(host)).toEqual({ status: 403, body: { error: "forbidden host" } });
+    },
+  );
+});
