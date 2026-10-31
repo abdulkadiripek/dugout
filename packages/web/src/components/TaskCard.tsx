@@ -28,12 +28,16 @@ export function TaskCard({ task }: { task: TaskSummary }) {
       {task.reason ? <p className="reason">{task.reason}</p> : null}
       <div className="dots">
         <AttemptDots attempts={task.attempts} status={task.status} />
-        <span className="muted">{task.attempts} {task.attempts === 1 ? "attempt" : "attempts"}</span>
+        {task.attempts > 0 ? (
+          <span className="muted">{task.attempts} {task.attempts === 1 ? "attempt" : "attempts"}</span>
+        ) : null}
       </div>
+      {max > 1 ? (
       <div className="bar" role="img" aria-label={`${t.input} input, ${t.output} output tokens`}>
         <span style={{ width: `${(task.tokens.input / max) * 100}%`, background: "var(--accent)" }} />
         <span style={{ width: `${(task.tokens.output / max) * 100}%`, background: "var(--dot-needs_review)" }} />
       </div>
+      ) : null}
       <div className="foot">
         <span><ProviderBadges providers={task.providers} /></span>
         <span><b>{formatDuration(task.durationMs)}</b> total</span>
