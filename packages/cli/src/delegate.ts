@@ -81,7 +81,7 @@ function report(events: Event[], log: string, io: IO): void {
   io.stdout(`task: ${finished.taskId}\nstatus: ${finished.status}\nattempts: ${finished.attempts}\nproviders: ${finished.providers.join(",")}\nreview: ${verdict}\nlog: ${display}\n`);
 }
 
-function buildAdapters(pkg: TaskPackage, scenario: string | undefined, deps: Deps): Partial<Record<ProviderName, ProviderAdapter>> {
+function buildAdapters(pkg: TaskPackage, scenario: string | undefined, deps: Deps, config: Config): Partial<Record<ProviderName, ProviderAdapter>> {
   if (scenario !== undefined || pkg.providers.every(provider => provider === "fake")) {
     return createFakeScenario(scenarioSpec(scenario ?? "success", pkg.providers)).adapters;
   }
@@ -93,7 +93,7 @@ function buildAdapters(pkg: TaskPackage, scenario: string | undefined, deps: Dep
   const adapters: Partial<Record<ProviderName, ProviderAdapter>> = {};
   for (const provider of pkg.providers) {
     if (provider === "codex") adapters.codex = createCodexAdapter(options);
-    if (provider === "claude") adapters.claude = createClaudeAdapter(options);
+    if (provider === "claude") adapters.claude = createClaudeAdapter({ ...options, allowedTools: config.claude.allowedTools });
   }
   return adapters;
 }
@@ -107,7 +107,7 @@ export async function delegate(options: Options, io: IO, config: Config, deps: D
     });
     if (pkg.providers.includes("fake") && pkg.providers.some(provider => provider !== "fake")) throw new Error("fake cannot be mixed with other providers");
   }
-  const built = buildAdapters(pkg, options.scenario, deps);
+  const built = buildAdapters(pkg, options.scenario, deps, config);
   const repo = await findRepoRoot(resolve(io.cwd, options.repo ?? "."));
   validatePaths(repo, pkg.files_to_read);
   const controller = new AbortController();

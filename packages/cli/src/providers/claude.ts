@@ -5,6 +5,7 @@ import { object, parseLine, number, pathSummary, shellSummary, type AdapterOptio
 
 export function createClaudeAdapter(opts: AdapterOptions): ProviderAdapter {
   const spawn = opts.spawn ?? spawnReal;
+  const allowedTools = opts.allowedTools ?? ["Write", "Edit", "Read"];
   const timeout = opts.attemptTimeoutMs ?? 600000;
   const args = (prompt: string, model: string | undefined) => ["-p", prompt, ...(model === undefined ? [] : ["--model", model])];
   return {
@@ -17,7 +18,7 @@ export function createClaudeAdapter(opts: AdapterOptions): ProviderAdapter {
       let usage: AttemptResult["usage"];
       let status: "ok" | "crash" | "timeout" = "crash";
       try {
-        const child = spawn("claude", [...args(input.prompt, input.model), "--output-format", "stream-json", "--verbose", "--no-session-persistence", "--permission-mode", "acceptEdits", "--allowedTools", "Write", "Edit", "Read"], { cwd: input.cwd });
+        const child = spawn("claude", [...args(input.prompt, input.model), "--output-format", "stream-json", "--verbose", "--no-session-persistence", "--permission-mode", "acceptEdits", "--allowedTools", ...allowedTools], { cwd: input.cwd });
         const lines = processLines(child, input.signal, timeout);
         while (true) {
           const next = await lines.next();

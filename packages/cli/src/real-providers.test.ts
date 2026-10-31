@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { checkEventLog } from "@panosu/core";
 import { git, invoke, packageFile, readEvents, setup } from "./test-helpers.js";
@@ -70,7 +70,7 @@ it.each([false, true])("implements with Codex and cross-reviews with Claude (set
   expect(await git(ctx.repo, "status", "--porcelain")).toBe("");
   expect(existsSync(join(ctx.repo, "model-result"))).toBe(false);
   expect(spawn.mock.calls).toEqual([
-    ["codex", ["exec", "--json", "-m", "gpt-6-astra", "-s", "workspace-write", "-C", cwd, expect.any(String)], { cwd }],
+    ["codex", ["exec", "--json", "-m", "gpt-6.1-sol", "-s", "workspace-write", "-C", cwd, expect.any(String)], { cwd }],
     ["claude", ["-p", expect.any(String), "--model", "claude-sonnet-5-5", "--output-format", "json", "--json-schema", JSON.stringify(reviewJsonSchema), "--no-session-persistence", "--tools", ""], { cwd }],
   ]);
   const prompt = spawn.mock.calls[1]?.[1][1];
@@ -98,7 +98,7 @@ it("falls back after Codex crashes and gets an approving Codex review", async ()
   const schema = spawn.mock.calls[2]?.[1][11];
   expect(typeof schema).toBe("string");
   expect(spawn.mock.calls).toEqual([
-    ["codex", ["exec", "--json", "-m", "gpt-6-astra", "-s", "workspace-write", "-C", cwd, expect.any(String)], { cwd }],
+    ["codex", ["exec", "--json", "-m", "gpt-6.1-sol", "-s", "workspace-write", "-C", cwd, expect.any(String)], { cwd }],
     ["claude", ["-p", expect.any(String), "--model", "claude-sonnet-5-5", "--output-format", "stream-json", "--verbose", "--no-session-persistence", "--permission-mode", "acceptEdits", "--allowedTools", "Write", "Edit", "Read"], { cwd }],
     ["codex", ["exec", "--json", "-m", "gpt-6.1-sol", "-s", "read-only", "-C", cwd, "--skip-git-repo-check", "--ephemeral", "--output-schema", schema, "-o", join(dirname(schema!), "output.json"), expect.any(String)], { cwd }],
   ]);
@@ -158,4 +158,16 @@ it.each([["--scenario", "success"], ["--providers", "fake"]])("keeps fake mode i
   expect((await run(spawn, [flag, value])).code).toBe(0);
   expect(spawn).not.toHaveBeenCalled();
   events();
+});
+
+it("passes claude.allowedTools from config to the spawned Claude argv", async () => {
+  mkdirSync(join(ctx.dir, ".ajan-panosu"), { recursive: true });
+  writeFileSync(join(ctx.dir, ".ajan-panosu", "config.json"), JSON.stringify({ claude: { allowedTools: ["Write", "Bash(pnpm *)"] } }));
+  packageFile(ctx.file, { verify: "test -f model-result" });
+  const spawn = await replay([
+    { fixture: "claude/stream-json-implement.sample.jsonl", implement: true },
+    { fixture: "codex/exec-json-review.sample.jsonl" },
+  ]);
+  await run(spawn, ["--providers", "claude,codex"]);
+  expect(spawn.mock.calls[0]?.[1].slice(-3)).toEqual(["--allowedTools", "Write", "Bash(pnpm *)"]);
 });

@@ -13,10 +13,11 @@ describe("loadConfig", () => {
   it("uses defaults for missing files and empty config", () => {
     const defaults = {
       models: {
-        implement: { codex: "gpt-6-astra", claude: "claude-sonnet-5-5", fake: "fake" },
+        implement: { codex: "gpt-6.1-sol", claude: "claude-sonnet-5-5", fake: "fake" },
         review: { codex: "gpt-6.1-sol", claude: "claude-sonnet-5-5", fake: "fake" },
       },
       verifyTimeoutMs: 600000,
+      claude: { allowedTools: ["Write", "Edit", "Read"] },
     };
     expect(loadConfig(file)).toEqual(defaults);
     writeFileSync(file, "{}");
@@ -26,11 +27,15 @@ describe("loadConfig", () => {
     writeFileSync(file, JSON.stringify({ models: { codex: { review: "custom" }, fake: { implement: "test" } }, verifyTimeoutMs: 42 }));
     const config = loadConfig(file);
     expect(config.models.review.codex).toBe("custom");
-    expect(config.models.implement.codex).toBe("gpt-6-astra");
+    expect(config.models.implement.codex).toBe("gpt-6.1-sol");
     expect(config.models.implement.fake).toBe("test");
     expect(config.models.review.fake).toBe("fake");
     expect(config.verifyTimeoutMs).toBe(42);
     expect(loadConfig(join(dir, "missing")).verifyTimeoutMs).toBe(600000);
+  });
+  it("accepts a custom claude.allowedTools list", () => {
+    writeFileSync(file, JSON.stringify({ claude: { allowedTools: ["Read", "Bash(pnpm *)"] } }));
+    expect(loadConfig(file).claude.allowedTools).toEqual(["Read", "Bash(pnpm *)"]);
   });
   it.each([
     ["{", "config"], ["null", "config"], ['{"models":[]}', "models"],
@@ -39,6 +44,11 @@ describe("loadConfig", () => {
     ['{"models":{"fake":{"review":false}}}', "models.fake.review"],
     ['{"verifyTimeoutMs":"10"}', "verifyTimeoutMs"],
     ['{"verifyTimeoutMs":-1}', "verifyTimeoutMs"],
+    ['{"claude":[]}', "claude"],
+    ['{"claude":{"allowedTools":"Write"}}', "claude.allowedTools"],
+    ['{"claude":{"allowedTools":[]}}', "claude.allowedTools"],
+    ['{"claude":{"allowedTools":["Write",3]}}', "claude.allowedTools"],
+    ['{"claude":{"allowedTools":["Write",""]}}', "claude.allowedTools"],
   ])("rejects invalid config %s and names its key", (text, key) => {
     writeFileSync(file, text);
     expect(() => loadConfig(file)).toThrow(ConfigError);

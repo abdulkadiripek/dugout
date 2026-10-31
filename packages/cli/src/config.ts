@@ -6,6 +6,7 @@ import type { ProviderName } from "@panosu/core";
 export interface Config {
   models: { implement: Record<ProviderName, string>; review: Record<ProviderName, string> };
   verifyTimeoutMs: number;
+  claude: { allowedTools: string[] };
 }
 
 export class ConfigError extends Error {
@@ -29,10 +30,11 @@ function timeout(value: unknown, key: string): number {
 export function loadConfig(file = join(homedir(), ".ajan-panosu", "config.json")): Config {
   const config: Config = {
     models: {
-      implement: { codex: "gpt-6-astra", claude: "claude-sonnet-5-5", fake: "fake" },
+      implement: { codex: "gpt-6.1-sol", claude: "claude-sonnet-5-5", fake: "fake" },
       review: { codex: "gpt-6.1-sol", claude: "claude-sonnet-5-5", fake: "fake" },
     },
     verifyTimeoutMs: 600000,
+    claude: { allowedTools: ["Write", "Edit", "Read"] },
   };
   let text: string;
   try {
@@ -63,6 +65,16 @@ export function loadConfig(file = join(homedir(), ".ajan-panosu", "config.json")
   }
   if ("verifyTimeoutMs" in root) {
     config.verifyTimeoutMs = timeout(root.verifyTimeoutMs, "verifyTimeoutMs");
+  }
+  if ("claude" in root) {
+    const claude = object(root.claude, "claude");
+    if ("allowedTools" in claude) {
+      const tools = claude.allowedTools;
+      if (!Array.isArray(tools) || tools.length === 0 || tools.some(tool => typeof tool !== "string" || tool === "")) {
+        throw new ConfigError("claude.allowedTools must be a non-empty array of non-empty strings");
+      }
+      config.claude.allowedTools = tools as string[];
+    }
   }
   if ("attemptTimeoutMs" in root) timeout(root.attemptTimeoutMs, "attemptTimeoutMs");
   return config;

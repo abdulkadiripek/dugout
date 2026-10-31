@@ -17,6 +17,11 @@ it("replays implementation output and invokes the exact command", async () => {
   expect(events[1]?.type).toBe("provider.message");
   expect(events[2]).toEqual({ type: "provider.usage", attempt: 1, ...result.usage });
 });
+it("passes a custom allowedTools list as separate argv items", async () => {
+  const spawn = vi.fn(() => scripted(["x"]));
+  await collect(createClaudeAdapter({ context, spawn, allowedTools: ["Read", "Bash(pnpm *)", "Write"] }));
+  expect(spawn).toHaveBeenCalledWith("claude", ["-p", input.prompt, "--model", input.model, "--output-format", "stream-json", "--verbose", "--no-session-persistence", "--permission-mode", "acceptEdits", "--allowedTools", "Read", "Bash(pnpm *)", "Write"], { cwd: input.cwd });
+});
 it.each([
   [[], 0, null, "invalid_output"],
   [[{ type: "result", subtype: "success", is_error: true }], 0, null, "crash"],

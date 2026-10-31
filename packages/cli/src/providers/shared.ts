@@ -4,6 +4,7 @@ import type { SpawnFn } from "./spawn.js";
 export interface AdapterOptions {
   spawn?: SpawnFn;
   attemptTimeoutMs?: number;
+  allowedTools?: string[];
   getDiff?: (cwd: string, baseRef: string) => Promise<string>;
   context: () => { goal: string; acceptance: string[] };
 }
