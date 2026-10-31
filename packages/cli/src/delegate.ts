@@ -130,7 +130,7 @@ export async function delegate(options: Options, io: IO, config: Config, deps: D
       const adapter = built[provider];
       if (adapter) adapters[provider] = { name: provider, run: (input) => adapter.run({ ...input, cwd: resolve(repo, input.cwd) }), review: (input) => adapter.review({ ...input, cwd: resolve(repo, input.cwd) }) };
     }
-    const writer = createEventWriter(options.eventsDir, taskId);
+    const writer = createEventWriter(options.eventsDir, taskId, io.homedir === undefined ? {} : { homedir: io.homedir });
     const events: Event[] = [];
     const result = await runTask(pkg, {
       now: deps.now ?? (() => new Date()), newId: () => suffix, models: config.models, worktree, signal: controller.signal, adapters,

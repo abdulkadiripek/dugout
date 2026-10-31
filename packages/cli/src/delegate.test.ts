@@ -70,3 +70,14 @@ it.each(["acceptance", "escape", "missing", "parse", "mixed", "positions", "syml
   expect(existsSync(ctx.events)).toBe(false);
   expect(existsSync(join(ctx.repo, ".worktrees"))).toBe(false);
 });
+
+it("scrubs the home directory from the event log but not from stdout", async () => {
+  packageFile(ctx.file, { verify: "pwd", review: false, files_to_read: [] });
+  const result = await invoke(ctx, ["delegate", ctx.file, "--scenario", "success", "--events-dir", ctx.events]);
+  expect(result.code).toBe(0);
+  const log = readFileSync(join(ctx.events, "task-abcd.jsonl"), "utf8");
+  expect(log).not.toContain(ctx.dir);
+  const finished = readEvents(join(ctx.events, "task-abcd.jsonl")).find(event => event.type === "verify.finished");
+  expect(finished?.type === "verify.finished" ? finished.outputTail : "").toContain("~/");
+  expect(result.stdout).toContain("log: ~/events/task-abcd.jsonl\n");
+});

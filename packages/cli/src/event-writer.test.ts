@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, it } from "vitest";
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { eventSchema, type Event } from "@panosu/core";
 import { createEventWriter } from "./event-writer.js";
@@ -45,4 +45,39 @@ it.each(readdirSync(fixtures).filter(name => name.endsWith(".jsonl")))("round-tr
   const writer = createEventWriter(dir, name.replace(".jsonl", ""));
   for (const line of lines) writer.emit(eventSchema.parse(line));
   expect(readFileSync(writer.path, "utf8").trim().split("\n").map(line => JSON.parse(line) as unknown)).toEqual(lines);
+});
+
+it("scrubs the home directory in nested strings on path boundaries without mutating the input", () => {
+  const home = "/hm/ab";
+  const writer = createEventWriter(dir, "scrub-1", { homedir: home });
+  const input = {
+    schemaVersion: 1, seq: 0, ts: "2026-10-31T00:00:00Z", taskId: "scrub-1", type: "verify.finished", attempt: 1,
+    passed: false, exitCode: 1, durationMs: 5, outputTail: "in /hm/ab/x and /hm/abc/x and /hm/ab",
+  } as unknown as Event;
+  const copy = structuredClone(input);
+  writer.emit(input);
+  expect(input).toEqual(copy);
+  const written = JSON.parse(readFileSync(writer.path, "utf8")) as { outputTail: string; exitCode: number; passed: boolean };
+  expect(written.outputTail).toBe("in ~/x and /hm/abc/x and ~");
+  expect(written.exitCode).toBe(1);
+  expect(written.passed).toBe(false);
+});
+
+it("scrubs several occurrences with a trailing-slash homedir", () => {
+  const writer = createEventWriter(dir, "scrub-2", { homedir: "/hm/ab/" });
+  const input = { ...event, taskId: "scrub-2", command: "cd /hm/ab/p && /hm/ab/bin/t" };
+  writer.emit(input);
+  expect((JSON.parse(readFileSync(writer.path, "utf8")) as { command: string }).command).toBe("cd ~/p && ~/bin/t");
+});
+
+it.each(["", "/"])("scrubs nothing for homedir %j", home => {
+  const writer = createEventWriter(dir, "scrub-3", { homedir: home });
+  writer.emit({ ...event, taskId: "scrub-3", command: "ls /hm/ab/x" });
+  expect(readFileSync(writer.path, "utf8")).toContain("ls /hm/ab/x");
+});
+
+it("defaults to os.homedir()", () => {
+  const writer = createEventWriter(dir, "scrub-4");
+  writer.emit({ ...event, taskId: "scrub-4", command: `ls ${homedir()}/x` });
+  expect(readFileSync(writer.path, "utf8")).toContain("ls ~/x");
 });
