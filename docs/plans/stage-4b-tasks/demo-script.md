@@ -1,6 +1,6 @@
 ---
 id: demo-script
-goal: Add `pnpm demo`: one command that starts the read-only API on the fixture event logs and the web dev server, prints the URL, and shuts both down cleanly, with no model calls.
+goal: "Add `pnpm demo`: one command that starts the read-only API on the fixture event logs and the web dev server, prints the URL, and shuts both down cleanly, with no model calls."
 files_to_read:
   - "AGENTS.md"
   - "package.json"
