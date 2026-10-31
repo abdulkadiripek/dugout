@@ -6,10 +6,19 @@
     "noEmit": true,
     "rootDir": "src",
     "jsx": "react-jsx",
-    "lib": ["ES2023", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
+    "lib": [
+      "ES2023",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "types": [
+      "vite/client",
+      "node"
+    ],
     "module": "ESNext",
     "moduleResolution": "Bundler"
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }
