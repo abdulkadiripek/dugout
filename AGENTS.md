@@ -11,7 +11,7 @@ Bring-your-own-subscription: only official CLIs (`claude`, `codex`) run as child
 
 ## Status
 
-Stages 1-2 of 6 are implemented (core with the `fake` provider; `panosu delegate` / `panosu list` in fake mode, no real model calls in the product). Next: Stage 3 (`docs/plans/stage-3.md`). Stages and decisions: `docs/architecture.md`, `docs/adr/`.
+Stages 1-3 of 6 are implemented: core with the `fake` provider, `panosu delegate` / `list` / `eval`, real Codex and Claude adapters (verified live once, cheap models). Next: Stage 4 (`docs/plans/stage-4.md`). Stages and decisions: `docs/architecture.md`, `docs/adr/`.
 
 ## Commands
 
