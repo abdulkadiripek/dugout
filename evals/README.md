@@ -6,11 +6,16 @@ Layout per task (`evals/tasks/NN-<name>/`):
 
 | Path | Purpose |
 |---|---|
-| `task.md` | The task package given to the implementer. |
-| `seed/` | Starting code copied into a fresh worktree. (Written before Stage 3.) |
-| `check/` | Hidden acceptance tests, copied in only when verifying. **Never shown to the implementer.** (Written before Stage 3.) |
+| `task.md` | The task package given to the implementer. Its `verify` runs the visible and the hidden tests. |
+| `seed/` | Starting code. Copied into a fresh temp git repo and committed before the run. |
+| `check/` | Hidden acceptance tests. Copied over the worktree **only when verifying**, never shown to the implementer. |
+| `solution/` | Reference solution files, overlaid on `seed/` by tests to prove the check is satisfiable. Never given to an implementer. |
 
-Right now only `task.md` files exist (drafts). `seed/` and `check/` are written before the eval harness (`panosu eval`, after Stage 3).
+Runnable tasks use only Node built-ins (`node --test` with TypeScript type stripping; needs Node 24 or newer) so no install or network is needed. A task is **valid** when the seed fails its check and the seed with `solution/` passes it (tested in `packages/cli`).
+
+Status: tasks 01, 02, 03, 05, 07 are runnable. 04 (needs `tsc` inside the seed), 06 (needs React and network) and 08 (the ambiguity report cannot be checked automatically) are **pending**; their `task.md` files are drafts.
+
+`panosu eval <task|all>` (see `docs/contracts/cli.md`) runs the tasks through the normal delegate flow in a temp repo per task.
 
 ## Tasks
 
