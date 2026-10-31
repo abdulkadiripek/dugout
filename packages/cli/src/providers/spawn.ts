@@ -51,7 +51,10 @@ export async function* processLines(child: SpawnedProcess, signal: AbortSignal, 
   signal.addEventListener("abort", stop, { once: true });
   if (signal.aborted) stop();
   const exit = child.exited.then(value => ({ value }), () => ({ value: { code: 1, signal: null } }));
-  const failed = exit.then(({ value }) => value.code !== 0 || value.signal !== null ? null : new Promise<never>(() => {}));
+  // A dying process may still have its final lines buffered (a usage-limit error is printed right before exit 1).
+  const failed = exit.then(({ value }) => value.code !== 0 || value.signal !== null
+    ? new Promise<null>(resolve => { setTimeout(() => resolve(null), 250).unref(); })
+    : new Promise<never>(() => {}));
   try {
     const iterator = child.lines[Symbol.asyncIterator]();
     while (!timedOut) {

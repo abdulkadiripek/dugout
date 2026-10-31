@@ -6,6 +6,14 @@ import { spawnReal, processLines } from "./spawn.js";
 import { buildReviewPrompt, defaultGetDiff, reviewJsonSchema } from "./review-prompt.js";
 import { object, parseLine, number, pathSummary, type AdapterOptions } from "./shared.js";
 
+const usageLimit = (event: Record<string, unknown>): boolean => {
+  if (event.type !== "error" && event.type !== "turn.failed") return false;
+  const message = typeof event.message === "string" ? event.message : object(event.error).message;
+  return typeof message === "string" && message.toLowerCase().includes("usage limit");
+};
+
+class UsageLimitError extends Error {}
+
 export function createCodexAdapter(opts: AdapterOptions): ProviderAdapter {
   const spawn = opts.spawn ?? spawnReal;
   const timeout = opts.attemptTimeoutMs ?? 600000;
@@ -18,6 +26,7 @@ export function createCodexAdapter(opts: AdapterOptions): ProviderAdapter {
       let completed = false;
       let failed = false;
       let invalid = false;
+      let limited = false;
       let usage: AttemptResult["usage"];
       let status: "ok" | "crash" | "timeout" = "crash";
       try {
@@ -29,6 +38,7 @@ export function createCodexAdapter(opts: AdapterOptions): ProviderAdapter {
           let event: Record<string, unknown>;
           try { event = parseLine(next.value); } catch { invalid = true; continue; }
           if (event.type === "error" || event.type === "turn.failed") failed = true;
+          if (usageLimit(event)) limited = true;
           if (event.type === "turn.completed") {
             completed = true;
             const raw = object(event.usage);
@@ -49,7 +59,7 @@ export function createCodexAdapter(opts: AdapterOptions): ProviderAdapter {
           }
         }
       } catch { status = "crash"; }
-      const exitReason = status !== "ok" ? status : failed ? "crash" : invalid || !completed ? "invalid_output" : "ok";
+      const exitReason = status === "crash" && limited ? "rate_limit" : status !== "ok" ? status : failed ? "crash" : invalid || !completed ? "invalid_output" : "ok";
       return { exitReason, durationMs: performance.now() - start, ...(usage ? { usage } : {}) };
     },
     async review(input) {
@@ -65,21 +75,27 @@ export function createCodexAdapter(opts: AdapterOptions): ProviderAdapter {
         let text = "";
         let completed = false;
         let failed = false;
+        let limited = false;
         while (true) {
           const next = await lines.next();
           if (next.done) {
+            if (limited && next.value === "crash") throw new UsageLimitError("Codex usage limit reached; review unavailable");
             if (next.value !== "ok" || failed || !completed) throw new Error("Unsuccessful review");
             break;
           }
           let event: Record<string, unknown>;
           try { event = parseLine(next.value); } catch { failed = true; continue; }
           if (event.type === "error" || event.type === "turn.failed") failed = true;
+          if (usageLimit(event)) limited = true;
           if (event.type === "turn.completed") completed = true;
           const item = object(event.item);
           if (event.type === "item.completed" && item.type === "agent_message" && typeof item.text === "string") text = item.text;
         }
         return normalizeReview(JSON.parse(text));
-      } catch { throw new Error("Codex review failed or returned invalid output"); }
+      } catch (error) {
+        if (error instanceof UsageLimitError) throw error;
+        throw new Error("Codex review failed or returned invalid output");
+      }
       finally { if (dir) await rm(dir, { recursive: true, force: true }); }
     },
   };

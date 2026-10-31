@@ -86,3 +86,21 @@ it.each(["invalid-json", "invalid-review", "crash", "timeout", "null-line"])("ha
   else await expect(adapter.review(reviewInput)).rejects.toThrow(/^Codex review failed or returned invalid output$/);
   expect(existsSync(schemaPath)).toBe(false);
 });
+
+it("maps the recorded usage limit to rate_limit only on a failing exit", async () => {
+  const lines = await sample("codex/exec-json-usage-limit.sample.jsonl");
+  expect((await collect(createCodexAdapter({ context, spawn: () => scripted(lines, 1) }))).result.exitReason).toBe("rate_limit");
+  expect((await collect(createCodexAdapter({ context, spawn: () => scripted(lines, 0) }))).result.exitReason).not.toBe("rate_limit");
+});
+it("does not treat a usage limit mentioned in a message as rate_limit", async () => {
+  const lines = [JSON.stringify({ type: "item.completed", item: { type: "agent_message", text: "You hit your usage limit" } })];
+  expect((await collect(createCodexAdapter({ context, spawn: () => scripted(lines, 1) }))).result.exitReason).toBe("crash");
+});
+it("reports a readable usage-limit error from review without a URL", async () => {
+  const lines = await sample("codex/exec-json-usage-limit.sample.jsonl");
+  const adapter = createCodexAdapter({ context, getDiff: async () => "d", spawn: () => scripted(lines, 1) });
+  const error = await adapter.review(reviewInput).catch((e: unknown) => e);
+  expect(error).toBeInstanceOf(Error);
+  expect((error as Error).message).toMatch(/usage limit/i);
+  expect((error as Error).message).not.toMatch(/https?:/);
+});
