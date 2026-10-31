@@ -5,5 +5,8 @@
   "type": "module",
   "dependencies": {
     "@panosu/core": "workspace:*"
+  },
+  "bin": {
+    "panosu": "dist/bin.js"
   }
 }

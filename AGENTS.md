@@ -86,6 +86,7 @@ You receive a task package (`docs/contracts/task-package.md`) and nothing else f
 | Event types and fields | `docs/contracts/events.md` |
 | Task package format | `docs/contracts/task-package.md` |
 | Provider adapter interface, exit reasons | `docs/contracts/provider-adapter.md` |
+| CLI commands, output, exit codes | `docs/contracts/cli.md` |
 | Review JSON | `docs/contracts/review-result.md` |
 | Example event logs | `fixtures/events/*.jsonl` |
 | Past decisions and rejected options | `docs/adr/` |
