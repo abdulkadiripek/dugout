@@ -94,6 +94,9 @@ Rule: a real adapter may only be written after one cheap approved call has been 
 - On success: `thread.started`, `turn.started`, `item.completed` (`agent_message`, text is the JSON), `turn.completed`; the `-o` file holds the same JSON. With `-s read-only` and the diff in the prompt no file access was needed.
 - The model returned `verdict: "changes_requested"` with only a `minor` issue, contradicting the verdict rule of `review-result.md`. Adapters therefore **derive the verdict from the issues** (see `review-result.md`).
 
+### Observed 2026-10-31: full pipeline, live (log: `fixtures/events/real-codex-claude.jsonl`)
+`panosu delegate` with `providers: [codex, claude]`, Codex `gpt-6-luna` as implementer (`workspace-write`, in a git worktree) and `claude-haiku-5-5` as reviewer: one attempt, real verify passed, review `approve`, ~12 s total, 36.5k Codex input tokens reported. Still **unobserved**: any real `rate_limit` or `auth` failure from either CLI, a Codex `command` summary is the raw `bash -lc "..."` wrapper (cosmetic).
+
 ### Observed: `codex exec --json` (sample: `fixtures/providers/codex/exec-json.sample.jsonl`)
 - JSONL events seen: `thread.started` (`thread_id`), `turn.started`, `item.completed` (`item.type: "agent_message"`, `item.text`), `turn.completed` (`usage`: `input_tokens`, `cached_input_tokens`, `cache_write_input_tokens`, `output_tokens`, `reasoning_output_tokens`). Tool-call item types were not seen (the model made no tool calls).
 - **stdin must be closed** (`< /dev/null`). Without it `codex exec` printed "Reading additional input from stdin..." and hung until killed (280 s, 0 events). The message also appears with `/dev/null` but the run then proceeds.
