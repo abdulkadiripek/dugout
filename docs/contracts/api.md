@@ -12,6 +12,8 @@ Served by `packages/server` (command `panosu-serve [--port 4317] [--events-dir <
 | `GET /api/tasks/:id/diff` | `{ "diff": string, "truncated": boolean, "bytes": number }` |
 | `GET /api/scorecard` | `{ "implementers": ImplementerRow[], "reviewers": ReviewerRow[], "excluded": { "interrupted": number, "unreadable": number } }` |
 
+**Host check:** every request must carry a `Host` header whose hostname is `127.0.0.1`, `localhost` or `[::1]` (any port); anything else gets `403` `{ "error": "forbidden host" }`. This closes DNS-rebinding access from web pages. (The dev proxy of the web package forwards its own loopback host, which passes.)
+
 Errors are JSON `{ "error": string }`: `400` for an invalid id or query (an id must match `[a-zA-Z0-9][a-zA-Z0-9_-]*`; anything else, including `..`, is 400 and never touches the file system), `404` for an unknown task or a task without a branch, `409` for the diff of an unreadable log.
 
 ## TaskSummary

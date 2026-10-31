@@ -53,6 +53,8 @@ interface ProviderAdapter {
 | `models.fake` | `fake` |
 | `attemptTimeoutMs` | `600000` |
 
+Timeouts (`verifyTimeoutMs`, `attemptTimeoutMs`) must be integers from 1 to 2147483647 (the `setTimeout` limit); anything else is a config error.
+
 File shape: `{ "models": { "<provider>": { "implement": "...", "review": "..." } }, "verifyTimeoutMs": 600000 }`; every key is optional and overrides the default. `verifyTimeoutMs` (default `600000`) bounds the verify runner (see `cli.md`).
 
 Model names live only in config and fixtures, never in logic. Timeouts end an attempt with `exitReason: "timeout"`.

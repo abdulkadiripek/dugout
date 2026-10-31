@@ -25,14 +25,16 @@ Scenarios script only the adapters (exit reasons and the review verdict); **`ver
 ## `delegate` steps
 
 1. Read and validate the package with `parseTaskPackage`. On failure: print a readable error naming the field, exit 3, write no log and create no worktree.
-2. `baseRef` = the current branch name of the repo (the commit hash if HEAD is detached). Uncommitted changes in the main working tree are not part of the worktree; say nothing about them.
+2. `baseRef` = the current branch name of the repo (the commit hash if HEAD is detached); events record this name. The CLI also resolves it to a commit hash once at the start and uses the **hash** for every diff it computes or hands to a reviewer (`diffStat`, review prompt), so a base branch that advances during the run cannot change the diff. Uncommitted changes in the main working tree are not part of the worktree; say nothing about them.
 3. Task id = `<package id>-<4 hex chars>`. Make sure `.worktrees/` is listed in the repo's `info/exclude` (never touch tracked files or `.gitignore`). Create the worktree `.worktrees/<task-id>` on branch `panosu/<task-id>` from `baseRef`. `worktree.path` in events stays repo-relative; the CLI resolves it against the repo root before giving a `cwd` to adapters or the verify runner.
 4. If the package has `setup`, `runTask` runs it once in the worktree through the same runner as `verify` (same timeout) before the first attempt; a failing setup ends the task `failed` with zero attempts (see `events.md`).
 5. Call `runTask` (see `events.md`), appending each event to `<events-dir>/<task-id>.jsonl` as it is emitted.
 6. Before every `verify`, stage everything in the worktree (`git add -A`) so the diff against `baseRef` includes new files. `diffStat` is computed from `git diff --cached --numstat <baseRef>`.
-7. After `task.finished`, if anything is staged, commit it on the task branch with a fixed identity (`panosu <panosu@localhost>`) and message `panosu: <task id>`. The worktree is left in place. Merging is never done by the CLI.
+7. After `task.finished`, if anything is staged, commit it on the task branch with a fixed identity (`panosu <panosu@localhost>`), message `panosu: <task id>`, `--no-verify` and `commit.gpgsign=false` (the repo's hooks and signing must not run or block). The result block is printed before the commit; a commit failure only prints a warning on stderr and never changes the exit code. The worktree is left in place. Merging is never done by the CLI.
 
 ## Verify runner
+
+If `delegate` ends with an error (not only on a signal), the CLI aborts every provider process it started before exiting. After a verify command exits on its own, any process left in its process group is sent `SIGTERM` (only that group, nothing else).
 
 Runs `package.verify` with `sh -c` in the worktree; stdout and stderr are merged; `outputTail` is the last 30 lines. Default timeout 10 minutes; a timeout counts as a failed verify with `exitCode` 124. Only the process it started (and its process group) is ever signalled. On `SIGINT`/`SIGTERM` the CLI stops its running verify process group, writes nothing more (no `task.finished`, so `list` shows `interrupted`) and exits 130.
 
@@ -76,7 +78,7 @@ Runs golden tasks (`evals/README.md`) through the normal `delegate` flow.
 - `<task>` is a number (`01`), a name (`slugify`) or a directory name (`01-slugify`); `all` runs every task directory that has `seed/` and `check/`. An unknown task is exit 3. `--evals-dir` defaults to `evals/tasks` under the repo root of the current directory.
 - **Quota guard:** `eval` has no default provider. Without `--providers` or `--scenario` it exits 3 with a message that real runs spend subscription quota.
 - For each task: create a temp directory under `os.tmpdir()`, `git init -b main`, copy `seed/`, commit with the fixed `panosu` identity, then run the `delegate` steps with that directory as the repo and the task's `task.md` as the package.
-- Hidden checks: after the worktree is staged for `verify`, the files of `check/` are copied into the worktree, `verify` runs, and the copied files are removed again before anything is staged or committed, so the reviewer, the diff and the task branch never contain them. A check file that would overwrite an existing file in the worktree is an error for that task (status `failed`, message on stderr).
+- Hidden checks: after the worktree is staged for `verify`, the files of `check/` are copied into the worktree, `verify` runs, and the copied files are removed again before anything is staged or committed, so the reviewer, the diff and the task branch never contain them. A check file that would overwrite an existing file in the worktree is an error for that task (status `failed`); the path goes to stderr only, and the verify output the model sees says generically that a reserved path collided (hidden check names are never shown to the model).
 - The temp directory is removed after each task unless `--keep` is given (then its path is printed).
 - Output: one line per task `<dir-name>  <status>  <attempts> attempts  <providers>`, then `passed <n>/<total>`. Exit code 0 when the run completed (tasks may have failed), 3 for usage errors, 130 when interrupted.
 - Event logs are written like any `delegate` run (to `--events-dir`).
