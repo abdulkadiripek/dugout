@@ -7,6 +7,7 @@ The orchestrator calls this through its shell (ADR 0002). Behavior lives in `pac
 ```
 panosu delegate <task.md> [--providers <list>] [--scenario <name>] [--events-dir <dir>] [--repo <dir>]
 panosu list [--events-dir <dir>] [--limit <n>]
+panosu eval <task|all> (--providers <list> | --scenario <name>) [--events-dir <dir>] [--evals-dir <dir>] [--keep]
 ```
 
 | Flag | Meaning | Default |
@@ -67,3 +68,15 @@ One line per task, newest first: `<task-id>  <status>  <attempts> attempts  <pro
 ## Config
 
 `~/.ajan-panosu/config.json` is optional and read-only for the CLI. Keys and defaults are in `provider-adapter.md`. A missing file means defaults; an invalid file is exit 3 with a readable error.
+
+## `eval`
+
+Runs golden tasks (`evals/README.md`) through the normal `delegate` flow.
+
+- `<task>` is a number (`01`), a name (`slugify`) or a directory name (`01-slugify`); `all` runs every task directory that has `seed/` and `check/`. An unknown task is exit 3. `--evals-dir` defaults to `evals/tasks` under the repo root of the current directory.
+- **Quota guard:** `eval` has no default provider. Without `--providers` or `--scenario` it exits 3 with a message that real runs spend subscription quota.
+- For each task: create a temp directory under `os.tmpdir()`, `git init -b main`, copy `seed/`, commit with the fixed `panosu` identity, then run the `delegate` steps with that directory as the repo and the task's `task.md` as the package.
+- Hidden checks: after the worktree is staged for `verify`, the files of `check/` are copied into the worktree, `verify` runs, and the copied files are removed again before anything is staged or committed, so the reviewer, the diff and the task branch never contain them. A check file that would overwrite an existing file in the worktree is an error for that task (status `failed`, message on stderr).
+- The temp directory is removed after each task unless `--keep` is given (then its path is printed).
+- Output: one line per task `<dir-name>  <status>  <attempts> attempts  <providers>`, then `passed <n>/<total>`. Exit code 0 when the run completed (tasks may have failed), 3 for usage errors, 130 when interrupted.
+- Event logs are written like any `delegate` run (to `--events-dir`).
