@@ -11,11 +11,11 @@ Bring-your-own-subscription: only official CLIs (`claude`, `codex`) run as child
 
 ## Status
 
-Stages 1-3 of 6 are implemented: core with the `fake` provider, `panosu delegate` / `list` / `eval`, real Codex and Claude adapters (verified live once, cheap models). Next: Stage 4 (`docs/plans/stage-4.md`). Stages and decisions: `docs/architecture.md`, `docs/adr/`.
+Stages 1-4 of 6 are implemented: core, `panosu delegate` / `list` / `eval`, real Codex and Claude adapters, the read-only API, and the React board (`pnpm demo`). Stage 5 (dogfood) is under way; Stage 6 (portfolio polish) waits for the maintainer's license, name and remote decisions. Stages and decisions: `docs/architecture.md`, `docs/adr/`.
 
 ## Commands
 
-These work from the repo root (`pnpm demo` arrives in Stage 4):
+These work from the repo root:
 
 ```
 pnpm install
@@ -23,7 +23,7 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm build
-pnpm demo        # board with fixture data, no model calls (Stage 4)
+pnpm demo        # board with fixture data, no model calls
 ```
 
 Runtime: Node + pnpm (installed). `tmux` and `bun` are not installed and not required.
