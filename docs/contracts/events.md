@@ -30,7 +30,7 @@ Type-specific fields are flat next to the envelope.
 | `verify.finished` | `attempt`, `passed`, `exitCode`, `durationMs`, `outputTail` (last ~30 lines) |
 | `review.started` | `provider`, `model` |
 | `review.finished` | `provider`, `model`, `result` (see `review-result.md`) |
-| `task.finished` | `status`, `attempts`, `providers` (distinct, in order of first use), `diffStat` (`files`, `additions`, `deletions`), `durationMs` |
+| `task.finished` | `status`, `attempts`, `providers` (implementers only: distinct providers that ran an attempt, in order of first use; the reviewer is recorded in `review.*`), `diffStat` (`files`, `additions`, `deletions`), `durationMs` |
 
 `exitReason` values: see `provider-adapter.md`.
 
@@ -44,6 +44,23 @@ Type-specific fields are flat next to the envelope.
   - `passed`: `verify` passed and (review off, or verdict `approve`)
   - `needs_review`: `verify` passed but review verdict is `changes_requested`
   - `failed`: `verify` still failing after `max_retries`, or every provider failed
+
+## Retry and failure accounting
+
+- `max_retries` counts attempts with `reason: retry`, **per provider**. A `fallback` attempt is not a retry and gets its own retry budget.
+- A retry is triggered by a failed `verify`, or by an attempt that ended `timeout` or `invalid_output`. The failed verify's `outputTail` (or the exit reason) is fed back to the same provider.
+- `rate_limit`, `auth`, `crash` never consume retries; they trigger fallback to the next provider in `package.providers`.
+- When a provider's retry budget is exhausted while `verify` still fails, the task ends `failed`. Failing tests are not a provider outage, so there is no fallback in this case.
+- When no provider is left after fallbacks, the task ends `failed`.
+- Examples: `retry.jsonl` (retry then pass), `failed.jsonl` (budget exhausted), `all-failed.jsonl` (no provider left).
+
+## Reviewer selection
+
+The reviewer is the first provider in `package.providers` that differs from the provider of the last attempt. If there is no different provider (single-provider list, or `fake` only), the same provider reviews. The model comes from config (`provider-adapter.md`).
+
+## Structural equality (for tests)
+
+Two logs are structurally equal when, event by event, `type` and these fields match: `attempt`, `reason`, `provider`, `status`, `exitReason`, `from`, `to`, `passed`, `exitCode`, `verdict`, `attempts`, `providers`. `ts`, `taskId`, `seq` values, durations, token counts, `outputTail` text, paths and review prose are ignored.
 
 ## Privacy
 

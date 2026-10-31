@@ -18,7 +18,11 @@ A task package is a Markdown file: YAML frontmatter + optional free-form body.
 | `review` | boolean | no, default true | Run cross-review after `verify` passes. |
 | `providers` | ("codex" \| "claude" \| "fake")[] | no, default `["codex","claude"]` | Provider order; later ones are fallbacks on `rate_limit`, `auth` or `crash`. |
 
-Validation rules: `id` unique per repo run; `verify` non-empty; paths must not escape the repo (no `..`, no absolute paths).
+Validation rules:
+- `verify` is non-empty; `acceptance` has at least one item.
+- Paths in `files_to_read` are repo-relative: reject absolute paths, `..` segments and backslashes. Symlink escapes are checked by the CLI when it resolves paths, not by `core`.
+- Uniqueness is not required of `id`; the task id gets a random suffix.
+- Parsing: `core` exposes `parseTaskPackage(markdown: string)` (frontmatter via the `yaml` package) and a zod schema for the parsed object.
 
 ## Example
 

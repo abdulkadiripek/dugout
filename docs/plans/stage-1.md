@@ -8,7 +8,16 @@ A pnpm TypeScript workspace where `core` defines the schemas, the adapter interf
 - `docs/architecture.md`, `docs/glossary.md`
 - `docs/contracts/events.md`, `task-package.md`, `provider-adapter.md`, `review-result.md`
 - `fixtures/events/*.jsonl`
-- `docs/adr/0001-typescript-monorepo.md`
+- `docs/adr/0001-typescript-monorepo.md`, `0004-opus-codex-sonnet.md`, `0006-worktree-per-task.md`
+
+(`docs/adr/0007-lint-tool.md` does not exist yet; creating it is deliverable 2.)
+
+## Decisions already made (do not reopen)
+- **Pure core with injected seams.** `core` exposes `runTask(pkg, deps)` where `deps = { now(): Date, newId(): string, adapters, runVerify(cwd, command): Promise<VerifyOutcome>, emit(event): void, worktree: { path, branch, baseRef } }`. `core` never writes files, spawns processes or reads the clock itself; `emit` is a sink callback, so tests collect events in an array. In Stage 1 tests supply the `worktree` stub; the CLI emits `worktree.created` in Stage 2.
+- **Task package parsing:** `parseTaskPackage(markdown)` in `core`, frontmatter via the `yaml` package (the one allowed runtime dependency besides `zod`).
+- **Retry/fallback/failure rules and reviewer selection:** exactly as in `docs/contracts/events.md`. Config defaults and `fake` scenario shape: `docs/contracts/provider-adapter.md`.
+- **Toolchain:** Node 26 is installed locally; declare `"engines": { "node": ">=22" }`. CI: `ubuntu-latest`, Node 22, pnpm via corepack. `pnpm build` = `tsc -b` over the packages (the `web` package builds with Vite only from Stage 4; until then it is an empty typecheck-only package).
+- **"Structurally equal"** is defined in `events.md`; write the comparison as a test helper.
 
 ## Deliverables
 1. Workspace: `packages/{core,cli,server,web}` as empty-but-buildable packages (only `core` has code), root `tsconfig` with `strict` and `noUncheckedIndexedAccess`, vitest, a lint tool.
@@ -22,9 +31,11 @@ A pnpm TypeScript workspace where `core` defines the schemas, the adapter interf
 9. `.claude/settings.json` typecheck hook (already present) becomes active once a `tsconfig.json` exists; confirm it works.
 
 ## Acceptance (each must be a test)
-- Every line of every `fixtures/events/*.jsonl` parses with the event schema; `seq` is contiguous; each log ends with one `task.finished`.
-- Rate-limit scenario on `codex` slot produces `fallback.triggered` then a `claude` attempt, matching `fixtures/events/fallback.jsonl` structurally.
-- A failing `verify` triggers a retry with the same provider, up to `max_retries`, then `failed`.
+- Every line of every `fixtures/events/*.jsonl` parses with the event schema; `seq` is contiguous; each log starts with `task.created` and ends with one `task.finished`; attempts pair up.
+- `runTask` with the matching `fake` scenario produces a log structurally equal (as defined in `events.md`) to each of `success`, `retry`, `fallback`, `review-issues`, `failed` and `all-failed`.
+- Rate-limit scenario on the `codex` slot produces `fallback.triggered` then a `claude` attempt with its own retry budget.
+- A failing `verify` triggers a retry with the same provider, up to `max_retries`, then `failed` (no fallback).
+- `timeout` and `invalid_output` attempts consume retries; `rate_limit`, `auth`, `crash` never do.
 - `review: false` skips review; `changes_requested` yields `needs_review`.
 - Invalid task packages (missing `acceptance`, path escaping the repo) are rejected with readable errors.
 - `pnpm lint && pnpm typecheck && pnpm test && pnpm build` pass on a clean clone.

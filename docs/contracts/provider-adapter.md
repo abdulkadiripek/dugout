@@ -44,12 +44,40 @@ interface ProviderAdapter {
 | `crash` | Non-zero exit or killed unexpectedly | fallback |
 | `invalid_output` | Output unparsable | counts as failed attempt |
 
+## Configuration (defaults; overridable in `~/.ajan-panosu/config.json`)
+
+| Key | Default |
+|---|---|
+| `models.codex` | `gpt-6-astra` (implementation), `gpt-6.1-sol` (review) |
+| `models.claude` | `claude-sonnet-5-5` (implementation and review) |
+| `models.fake` | `fake` |
+| `attemptTimeoutMs` | `600000` |
+
+Model names live only in config and fixtures, never in logic. Timeouts end an attempt with `exitReason: "timeout"`.
+
+## `fake` provider scenarios
+
+A scenario is a list of per-attempt outcomes per provider slot, e.g. `[{exit:"rate_limit"}]` for codex and `[{exit:"ok"}]` for claude, or `[{exit:"ok", verify:"fail"}, {exit:"ok", verify:"pass"}]` to script "fail then succeed". Built-ins: `success`, `fail`, `rate_limit`, `crash`.
+
 ## Verification status of real providers (update when observed)
 
 | Provider | Invocation (planned) | Verified? |
 |---|---|---|
-| `fake` | in-process, scripted scenarios: `success`, `fail`, `rate_limit`, `crash` | n/a |
-| `claude` | `claude -p --model <m> --output-format stream-json` | **No.** Event schema, exit code and message on limit are unknown. |
-| `codex` | `codex exec --json -m <m> --output-schema <file> -C <cwd>` | **No.** `--json` schema, exit codes and limit behavior unknown; flags exist per `--help`. |
+| `fake` | in-process, scripted scenarios | n/a |
+| `claude` | `claude -p --model <m> --output-format json` (stream-json still untested) | **Partly.** One call observed 2026-10-31, see below. Limit behavior unknown. |
+| `codex` | `codex exec --json -m <m> -s read-only -C <cwd> "<prompt>" < /dev/null` | **Partly.** One call observed 2026-10-31, see below. Limit behavior unknown. |
 
 Rule: a real adapter may only be written after one cheap approved call has been observed and a sanitized sample saved to `fixtures/providers/<provider>/`. Rate-limit detection stays "unknown" until a real limit is seen; until then it is implemented only for `fake`.
+
+### Observed: `claude -p --output-format json` (sample: `fixtures/providers/claude/print-json.sample.json`)
+- Single JSON object, exit 0. Useful keys: `type: "result"`, `subtype` (`success`), `is_error`, `stop_reason`, `terminal_reason`, `result` (only the **last** assistant message), `num_turns`, `duration_ms`, `total_cost_usd`, `usage` (`input_tokens`, `cache_read_input_tokens`, `cache_creation_input_tokens`, `output_tokens`), `modelUsage` (per model), `permission_denials[]`, `session_id`.
+- A read-only question that read ~10 docs took 15 turns, ~22 s, and ~190k total input tokens (mostly cache). `total_cost_usd` is an API-price estimate, not subscription usage.
+- Tools not in `--allowedTools` are denied and listed in `permission_denials` (the run still succeeds); the adapter should treat denials as a signal, not an error.
+- `usage.input_tokens` is tiny because of caching; token accounting for events must sum input + cache read + cache creation.
+
+### Observed: `codex exec --json` (sample: `fixtures/providers/codex/exec-json.sample.jsonl`)
+- JSONL events seen: `thread.started` (`thread_id`), `turn.started`, `item.completed` (`item.type: "agent_message"`, `item.text`), `turn.completed` (`usage`: `input_tokens`, `cached_input_tokens`, `cache_write_input_tokens`, `output_tokens`, `reasoning_output_tokens`). Tool-call item types were not seen (the model made no tool calls).
+- **stdin must be closed** (`< /dev/null`). Without it `codex exec` printed "Reading additional input from stdin..." and hung until killed (280 s, 0 events). The message also appears with `/dev/null` but the run then proceeds.
+- With `-m gpt-6-luna -s read-only` the model reported it could not read workspace files at all (no file-reading route), so it could not read `docs/plans/stage-1.md`. Cause unknown (sandbox on this Linux setup, or the model/tool configuration). Treat Codex-as-implementer in `read-only`/worktree as **unverified**; investigate with `-s workspace-write` in a throwaway worktree during Stage 3 before relying on it.
+- `AGENTS.md` was loaded automatically at startup (the model reproduced the rules before reading any file).
+- Exit code 0 on success. Limit and auth failure exit codes: unknown.

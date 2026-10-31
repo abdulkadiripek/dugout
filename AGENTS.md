@@ -43,7 +43,7 @@ packages/web     # React + Vite UI. Talks to server over HTTP only; never import
 ## Hard rules
 
 1. **Real model calls cost subscription quota.** Never run `claude -p`, `codex exec` or any real-provider mode on your own initiative. Default provider is `fake`. A real call needs explicit approval from the maintainer, the cheapest model, one turn.
-2. **Do not assert unverified CLI behavior.** Exit codes, rate-limit messages and stream schemas of `claude`/`codex` are listed as unknown in `docs/contracts/provider-adapter.md` until observed. Observe with one cheap call, record the result and a sanitized fixture, then write code.
+2. **Do not assert unverified CLI behavior.** What has and has not been observed for `claude`/`codex` (output shapes, exit codes, rate-limit messages) is recorded in `docs/contracts/provider-adapter.md`. For anything not listed there, observe with one cheap approved call, save a sanitized sample under `fixtures/providers/`, then write code. When spawning `codex exec`, always close stdin (`< /dev/null`) or it hangs.
 3. **Self-harm paths (never):**
    - kill processes by pattern (`pkill`, `killall`); only terminate PIDs this program started
    - write to `~/.claude/`, `~/.codex/` or any live user data; read-only, and never auth files

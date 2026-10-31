@@ -1,0 +1,8 @@
+{"schemaVersion":1,"seq":0,"ts":"2026-01-19T09:00:00.000Z","taskId":"add-cache-k1l2","type":"task.created","package":{"id":"add-cache","goal":"Add an in-memory cache to the log reader.","files_to_read":["packages/server/src/reader.ts"],"constraints":[],"acceptance":["Second read of an unchanged log does not hit the disk"],"verify":"pnpm test","max_retries":2,"review":true,"providers":["codex","claude"]}}
+{"schemaVersion":1,"seq":1,"ts":"2026-01-19T09:00:01.000Z","taskId":"add-cache-k1l2","type":"worktree.created","path":".worktrees/add-cache-k1l2","branch":"panosu/add-cache-k1l2","baseRef":"main"}
+{"schemaVersion":1,"seq":2,"ts":"2026-01-19T09:00:02.000Z","taskId":"add-cache-k1l2","type":"attempt.started","attempt":1,"reason":"initial","provider":"codex","model":"gpt-6-astra"}
+{"schemaVersion":1,"seq":3,"ts":"2026-01-19T09:00:03.000Z","taskId":"add-cache-k1l2","type":"attempt.finished","attempt":1,"status":"failed","exitReason":"rate_limit","durationMs":1000}
+{"schemaVersion":1,"seq":4,"ts":"2026-01-19T09:00:03.100Z","taskId":"add-cache-k1l2","type":"fallback.triggered","from":"codex","to":"claude","reason":"rate_limit"}
+{"schemaVersion":1,"seq":5,"ts":"2026-01-19T09:00:03.200Z","taskId":"add-cache-k1l2","type":"attempt.started","attempt":2,"reason":"fallback","provider":"claude","model":"claude-sonnet-5-5"}
+{"schemaVersion":1,"seq":6,"ts":"2026-01-19T09:00:04.000Z","taskId":"add-cache-k1l2","type":"attempt.finished","attempt":2,"status":"failed","exitReason":"auth","durationMs":800}
+{"schemaVersion":1,"seq":7,"ts":"2026-01-19T09:00:04.100Z","taskId":"add-cache-k1l2","type":"task.finished","status":"failed","attempts":2,"providers":["codex","claude"],"diffStat":{"files":0,"additions":0,"deletions":0},"durationMs":4100}
