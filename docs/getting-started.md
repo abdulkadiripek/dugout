@@ -105,14 +105,19 @@ git worktree remove .worktrees/add-slugify-3f2a
 
 ## 7. Watch it on the board
 
-The board reads the event logs. Two terminals, from the dugout directory:
+The board reads the event logs in `~/.dugout/events`. From the dugout directory:
 
 ```
-node packages/server/dist/bin.js --repo ~/path/to/your-project     # API on 127.0.0.1:4317
-pnpm --filter @dugout/web dev                                       # UI on http://localhost:5173
+pnpm board
 ```
 
-Open `http://localhost:5173`. The `--repo` is where task branches live, so the diff view works. `pnpm demo` opens the same board on the bundled fixture logs without any model calls.
+It starts the read-only API and the web UI, opens your browser and keeps running until you press `Ctrl+C`. The diff view needs the repository that holds the task branches; `pnpm board` uses the git root of the directory you start it from, or pass one explicitly:
+
+```
+node scripts/demo.mjs --live --open --repo ~/path/to/your-project
+```
+
+`pnpm demo` opens the same board on the bundled example logs, with no model calls and nothing of yours in it.
 
 ## 8. Let Claude Code drive it
 

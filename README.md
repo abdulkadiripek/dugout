@@ -43,15 +43,15 @@ Requirements: Node 24+, pnpm, and the `claude` and/or `codex` CLIs logged in for
 pnpm install
 pnpm lint && pnpm typecheck && pnpm test && pnpm build
 
-# the board on the fixture logs, no model calls
+# the board on the bundled example logs, no model calls
 pnpm demo
+
+# the board on your own logs (~/.dugout/events), opens your browser
+pnpm board
 
 # try the whole flow without any model call
 node packages/cli/dist/bin.js delegate task.md --scenario success --events-dir /tmp/dugout-events
 node packages/cli/dist/bin.js list --events-dir /tmp/dugout-events
-
-# the read-only API over your own logs (default: ~/.dugout/events)
-pnpm serve
 ```
 
 Real runs (`dugout delegate` without `--scenario`) spend subscription quota. Start with a tiny task and the default models. A step-by-step walkthrough (writing a task package, running it, reading the result, the board, using it from Claude Code) is in [`docs/getting-started.md`](docs/getting-started.md).
