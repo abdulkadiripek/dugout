@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ajan Panosu · Dense prototype</title>
+<style>
+:root{
+  --bg:#f5f5f2;--panel:#ffffff;--fg:#1b1c1a;--muted:#5a5c57;--line:#d5d6cf;--line2:#e5e6e0;--hover:#ecece6;--focus:#1d4ed8;
+  --passed:#0b6a2b;--needs_review:#8a4a00;--failed:#b3261e;--interrupted:#4a5260;--unreadable:#6b21a8;
+  --passed-bg:#e3f3e8;--needs_review-bg:#fbeed9;--failed-bg:#fbe4e2;--interrupted-bg:#e6e8ec;--unreadable-bg:#f0e6f9;
+  --link:#1d4ed8;--code:#f0f0ea;color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d1013;--panel:#13171b;--fg:#d6dae0;--muted:#8d97a3;--line:#262c33;--line2:#1d2227;--hover:#1a2026;--focus:#7cb7ff;
+  --passed:#4ade80;--needs_review:#fbbf24;--failed:#ff8a80;--interrupted:#a3adbb;--unreadable:#c99bff;
+  --passed-bg:#10271a;--needs_review-bg:#2b2208;--failed-bg:#2e1514;--interrupted-bg:#1e242b;--unreadable-bg:#25173a;
+  --link:#7cb7ff;--code:#0a0d10;color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0d1013;--panel:#13171b;--fg:#d6dae0;--muted:#8d97a3;--line:#262c33;--line2:#1d2227;--hover:#1a2026;--focus:#7cb7ff;
+  --passed:#4ade80;--needs_review:#fbbf24;--failed:#ff8a80;--interrupted:#a3adbb;--unreadable:#c99bff;
+  --passed-bg:#10271a;--needs_review-bg:#2b2208;--failed-bg:#2e1514;--interrupted-bg:#1e242b;--unreadable-bg:#25173a;
+  --link:#7cb7ff;--code:#0a0d10;color-scheme:dark}
+*{box-sizing:border-box}
+html{font-size:13px}
+body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.45 ui-monospace,"SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;-webkit-text-size-adjust:100%}
+a{color:var(--link);text-decoration:none}
+a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+button{font:inherit;color:inherit;background:none;border:1px solid var(--line);padding:2px 8px;cursor:pointer;border-radius:2px}
+button:hover{background:var(--hover)}
+.bar{display:flex;align-items:center;gap:16px;padding:6px 16px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:2;flex-wrap:wrap}
+.brand{font-weight:700;letter-spacing:.02em}
+.brand span{color:var(--muted);font-weight:400}
+.bar nav{display:flex;gap:4px;flex:1}
+.bar nav a{padding:2px 8px;color:var(--muted);border:1px solid transparent}
+.bar nav a[aria-current="page"]{color:var(--fg);border-color:var(--line);background:var(--bg)}
+main{padding:12px 16px 48px;max-width:1280px;margin:0 auto;outline:none}
+h1,h2,h3{margin:0;font-size:13px}
+h2{text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;font-size:11px;padding:0 0 4px;border-bottom:1px solid var(--line);margin:18px 0 8px}
+.muted{color:var(--muted)}
+.st{display:inline-flex;gap:5px;align-items:center;font-weight:600;white-space:nowrap}
+.st i{font-style:normal;width:14px;text-align:center}
+.st.passed{color:var(--passed)}.st.needs_review{color:var(--needs_review)}.st.failed{color:var(--failed)}.st.interrupted{color:var(--interrupted)}.st.unreadable{color:var(--unreadable)}
+.tag{display:inline-block;padding:0 6px;border:1px solid currentColor;border-radius:2px;font-size:11px;line-height:17px;white-space:nowrap}
+.tag.passed{color:var(--passed);background:var(--passed-bg)}.tag.needs_review{color:var(--needs_review);background:var(--needs_review-bg)}.tag.failed{color:var(--failed);background:var(--failed-bg)}.tag.interrupted{color:var(--interrupted);background:var(--interrupted-bg)}.tag.unreadable{color:var(--unreadable);background:var(--unreadable-bg)}
+.filters{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;margin-bottom:10px}
+.group{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.group>b{color:var(--muted);font-weight:400;margin-right:2px}
+.group button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.table{border:1px solid var(--line);background:var(--panel)}
+.row{display:grid;grid-template-columns:118px 190px minmax(0,1fr) 110px 40px 62px 108px 82px;gap:0 12px;align-items:center;padding:3px 10px;border-bottom:1px solid var(--line2);color:var(--fg)}
+.row:last-child{border-bottom:0}
+a.row:hover{background:var(--hover);text-decoration:none}
+a.row:focus-visible{outline-offset:-2px;background:var(--hover)}
+.row.head{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-top:5px;padding-bottom:5px}
+.row .num{text-align:right;font-variant-numeric:tabular-nums}
+.row>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sum{margin:0 0 10px;color:var(--muted)}
+.empty{padding:24px;text-align:center;color:var(--muted)}
+.crumbs{margin-bottom:8px;color:var(--muted)}
+.head1{display:flex;gap:12px;flex-wrap:wrap;align-items:baseline;margin-bottom:4px}
+.head1 h1{font-size:15px;word-break:break-all}
+.goal{margin:2px 0 8px;max-width:90ch}
+dl.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;margin:0 0 4px;border:1px solid var(--line);background:var(--panel)}
+dl.meta div{padding:4px 10px;border-right:1px solid var(--line2);border-bottom:1px solid var(--line2)}
+dl.meta dt{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+dl.meta dd{margin:0;word-break:break-all}
+.cols{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:0 24px;align-items:start}
+.log{margin:0;padding:0;list-style:none;border:1px solid var(--line);background:var(--panel)}
+.log li{display:grid;grid-template-columns:62px 18px 150px minmax(0,1fr);gap:0 6px;padding:2px 10px;border-bottom:1px solid var(--line2)}
+.log li:last-child{border-bottom:0}
+.log .t{color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.log .k{font-weight:600}
+.log .x{overflow-wrap:anywhere}
+.log li.mute .k,.log li.mute .x{color:var(--muted);font-weight:400}
+.log li.ok .k{color:var(--passed)}.log li.bad .k{color:var(--failed)}.log li.warn .k{color:var(--needs_review)}.log li.info .k{color:var(--link)}
+.att{border:1px solid var(--line);background:var(--panel);margin-bottom:8px}
+.att header{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;padding:4px 10px;border-bottom:1px solid var(--line2);background:var(--hover)}
+.att .body{padding:4px 10px}
+.kv{display:flex;flex-wrap:wrap;gap:0 16px;color:var(--muted)}
+.kv b{color:var(--fg);font-weight:500}
+pre{margin:6px 0 2px;padding:6px 8px;background:var(--code);border:1px solid var(--line2);overflow:auto;white-space:pre-wrap;word-break:break-word;font:inherit}
+.issue{display:grid;grid-template-columns:78px minmax(0,1fr);gap:0 8px;padding:4px 10px;border-bottom:1px solid var(--line2)}
+.issue:last-child{border-bottom:0}
+.issue .loc{color:var(--muted);overflow-wrap:anywhere}
+.box{border:1px solid var(--line);background:var(--panel)}
+.box .pad{padding:6px 10px}
+.placeholder{border:1px dashed var(--muted);padding:22px 12px;text-align:center;color:var(--muted);background:repeating-linear-gradient(135deg,transparent 0 8px,var(--line2) 8px 9px)}
+table.sc{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line)}
+table.sc th,table.sc td{padding:4px 10px;text-align:right;border-bottom:1px solid var(--line2);white-space:nowrap}
+table.sc th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;border-bottom:1px solid var(--line)}
+table.sc th:first-child,table.sc td:first-child{text-align:left}
+table.sc td{font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto}
+.foot{margin-top:18px;color:var(--muted)}
+.kbd{border:1px solid var(--line);padding:0 4px;border-radius:2px;color:var(--fg)}
+@media (max-width:1000px){
+  .cols{grid-template-columns:minmax(0,1fr)}
+  .row{grid-template-columns:110px minmax(0,1fr) 90px 40px 62px;grid-template-areas:"st id id id dur" "goal goal goal goal goal" "prov prov att tok date";padding:5px 10px;gap:0 8px}
+  .row.head{display:none}
+  .row .c-st{grid-area:st}.row .c-id{grid-area:id}.row .c-goal{grid-area:goal;color:var(--muted)}.row .c-prov{grid-area:prov}.row .c-att{grid-area:att}.row .c-dur{grid-area:dur}.row .c-tok{grid-area:tok}.row .c-date{grid-area:date}
+  .row .c-id{text-align:left}
+}
+@media (max-width:520px){
+  .row{grid-template-columns:104px minmax(0,1fr) auto;grid-template-areas:"st id dur" "goal goal goal" "prov att tok" "date date date"}
+  .log li{grid-template-columns:54px 16px minmax(0,1fr);grid-template-areas:"t i k" ". . x"}
+  .log li .t{grid-area:t}.log li .i{grid-area:i}.log li .k{grid-area:k}.log li .x{grid-area:x}
+  .issue{grid-template-columns:minmax(0,1fr)}
+  .bar{gap:8px}
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="brand">panosu<span>/board</span></div>
+  <nav aria-label="Main"><a href="#/" data-nav="list">tasks</a><a href="#/scorecard" data-nav="scorecard">scorecard</a></nav>
+  <button type="button" data-theme-toggle>Dark theme</button>
+</header>
+<main id="app" tabindex="-1"></main>
+<script id="board-data" type="application/json">/*{{DATA}}*/null</script>
+<script>
+/*{{SHARED_JS}}*/
+</script>
+<script>
+(() => {
+  const B = Board;
+  const e = B.esc;
+  const st = (s) => '<span class="st ' + s + '"><i aria-hidden="true">' + B.STATUS[s].icon + "</i>" + B.STATUS[s].label + "</span>";
+  const tag = (s) => '<span class="tag ' + s + '"><span aria-hidden="true">' + B.STATUS[s].icon + " </span>" + B.STATUS[s].label + "</span>";
+
+  const chip = (attr, value, label, current) =>
+    '<button type="button" ' + attr + '="' + e(value) + '" aria-pressed="' + (current === value) + '">' + e(label) + "</button>";
+
+  const list = () => {
+    const counts = B.statusCounts();
+    const items = B.filtered();
+    const statusChips = ["all", ...B.STATUS_ORDER.filter((s) => counts[s] > 0)]
+      .map((s) => chip("data-set-status", s, (s === "all" ? "all" : B.STATUS[s].label.toLowerCase()) + " " + counts[s], B.state.status)).join("");
+    const provChips = ["all", ...B.providersAll()].map((p) => chip("data-set-provider", p, p, B.state.provider)).join("");
+    const rows = items.map(({ summary: s }) => {
+      if (s.status === "unreadable") {
+        return '<a class="row" data-row href="#/tasks/' + e(s.taskId) + '"><span class="c-st">' + st(s.status) + '</span><span class="c-id">' + e(s.taskId) + '</span><span class="c-goal">' + e(s.reason) + "</span></a>";
+      }
+      const t = B.tokens(s.tokens);
+      return '<a class="row" data-row href="#/tasks/' + e(s.taskId) + '">' +
+        '<span class="c-st">' + st(s.status) + "</span>" +
+        '<span class="c-id">' + e(s.taskId) + "</span>" +
+        '<span class="c-goal" title="' + e(s.goal) + '">' + e(s.goal) + "</span>" +
+        '<span class="c-prov">' + e(s.providers.join(" > ") || "none") + "</span>" +
+        '<span class="c-att num">' + s.attempts + "<span class=\"muted\"> att</span></span>" +
+        '<span class="c-dur num">' + B.ms(s.durationMs) + "</span>" +
+        '<span class="c-tok num" title="' + t.input + " in / " + t.output + ' out">' + t.total + " tok</span>" +
+        '<span class="c-date num muted">' + B.date(s.startedAt) + "</span></a>";
+    }).join("");
+    return '<p class="sum">' + items.length + " of " + counts.all + " tasks. Keys: <span class=\"kbd\">j</span>/<span class=\"kbd\">k</span> move, <span class=\"kbd\">Enter</span> open, <span class=\"kbd\">Esc</span> back.</p>" +
+      '<div class="filters"><div class="group" role="group" aria-label="Filter by status"><b>status</b>' + statusChips + "</div>" +
+      '<div class="group" role="group" aria-label="Filter by provider"><b>provider</b>' + provChips + "</div></div>" +
+      '<div class="table"><div class="row head" aria-hidden="true"><span>Status</span><span>Task</span><span>Goal</span><span>Providers</span><span class="num">Att</span><span class="num">Time</span><span class="num">Tokens</span><span class="num">Date</span></div>' +
+      (rows || '<div class="empty">No tasks match these filters.</div>') + "</div>";
+  };
+
+  const attemptCard = (a) => {
+    const ok = a.status === "completed";
+    const v = a.verify;
+    return '<article class="att"><header><b>#' + a.n + "</b><span>" + e(a.provider) + " / " + e(a.model) + '</span><span class="tag ' + (a.reason === "initial" ? "interrupted" : a.reason === "retry" ? "needs_review" : "unreadable") + '">' + a.reason + "</span>" +
+      '<span class="st ' + (ok ? "passed" : "failed") + '"><i aria-hidden="true">' + (ok ? "✓" : "✕") + "</i>exit: " + e(a.exitReason) + "</span></header>" +
+      '<div class="body"><div class="kv"><span>time <b>' + B.ms(a.durationMs) + "</b></span><span>in <b>" + B.num(a.input) + "</b></span><span>out <b>" + B.num(a.output) + "</b></span><span>tools <b>" + a.tools.length + "</b></span></div>" +
+      (v ? '<div style="margin-top:6px"><span class="st ' + (v.passed ? "passed" : "failed") + '"><i aria-hidden="true">' + (v.passed ? "✓" : "✕") + "</i>verify " + (v.passed ? "passed" : "failed") + '</span> <span class="muted">exit ' + v.exitCode + " · " + B.ms(v.durationMs) + " · $ " + e(v.command) + "</span>" +
+        "<pre>" + (v.outputTail ? e(v.outputTail) : '<span class="muted">(no output)</span>') + "</pre></div>" : '<div class="muted" style="margin-top:6px">verify not run</div>') + "</div></article>";
+  };
+
+  const detail = (task) => {
+    const s = task.summary;
+    const ev = task.events;
+    if (s.status === "unreadable") {
+      return '<div class="crumbs"><a href="#/">&larr; tasks</a></div><div class="head1"><h1>' + e(s.taskId) + "</h1>" + tag(s.status) + '</div><p class="goal">This log could not be read: ' + e(s.reason) + "</p>";
+    }
+    const start = ev[0].ts;
+    const atts = B.attemptsOf(ev);
+    const setup = B.setupOf(ev);
+    const rev = B.reviewOf(ev);
+    const fin = B.finishOf(ev);
+    const t = B.tokens(s.tokens);
+    const log = ev.map((x) => {
+      const d = B.describe(x, start);
+      const icon = { ok: "✓", bad: "✕", warn: "!", info: "▸", mute: "·" }[d.tone];
+      return '<li class="' + d.tone + '"><span class="t">' + e(d.at) + '</span><span class="i" aria-hidden="true">' + icon + '</span><span class="k">' + e(d.label) + '</span><span class="x">' + e(d.text) + "</span></li>";
+    }).join("");
+    const issues = rev ? rev.result.issues.map((i) =>
+      '<div class="issue"><span class="tag ' + (i.severity === "blocker" || i.severity === "major" ? "failed" : i.severity === "minor" ? "needs_review" : "interrupted") + '">' + i.severity + '</span><span>' + e(i.message) + '<div class="loc">' + e(i.file) + (i.line ? ":" + i.line : "") + "</div></span></div>").join("") : "";
+    const review = rev ? '<div class="box"><div class="pad"><span class="st ' + (rev.result.verdict === "approve" ? "passed" : "needs_review") + '"><i aria-hidden="true">' + (rev.result.verdict === "approve" ? "✓" : "!") + "</i>" + e(rev.result.verdict.replace("_", " ")) + '</span> <span class="muted">by ' + e(rev.provider) + " / " + e(rev.model) + "</span><p>" + e(rev.result.summary) + "</p></div>" +
+      (issues || '<div class="pad muted" style="border-top:1px solid var(--line2)">No issues reported.</div>') + "</div>" : '<div class="box"><div class="pad muted">No review in this log.</div></div>';
+    return '<div class="crumbs"><a href="#/">&larr; tasks</a> <span class="kbd">Esc</span></div>' +
+      '<div class="head1"><h1>' + e(s.taskId) + "</h1>" + tag(s.status) + "</div>" +
+      '<p class="goal">' + e(s.goal) + "</p>" +
+      '<dl class="meta"><div><dt>Started</dt><dd>' + B.dateTime(s.startedAt) + "</dd></div><div><dt>Duration</dt><dd>" + B.ms(s.durationMs) + "</dd></div><div><dt>Attempts</dt><dd>" + s.attempts + "</dd></div><div><dt>Providers</dt><dd>" + e(s.providers.join(" > ") || "none") + "</dd></div><div><dt>Tokens in/out</dt><dd>" + t.input + " / " + t.output + "</dd></div><div><dt>Branch</dt><dd>" + e(s.branch) + "</dd></div>" +
+      (fin ? "<div><dt>Diff</dt><dd>" + fin.diffStat.files + " files +" + fin.diffStat.additions + " −" + fin.diffStat.deletions + "</dd></div>" : "") + "</dl>" +
+      '<div class="cols"><section><h2>Event log (' + ev.length + ")</h2><ol class=\"log\">" + log + "</ol></section><section>" +
+      "<h2>Attempts (" + atts.length + ")</h2>" +
+      (setup && !setup.passed ? '<div class="box"><div class="pad"><span class="st failed"><i aria-hidden="true">✕</i>setup failed</span> exit ' + setup.exitCode + "<pre>" + e(setup.outputTail ?? "") + "</pre></div></div>" : "") +
+      atts.map(attemptCard).join("") +
+      "<h2>Review</h2>" + review + "<h2>Diff</h2>" +
+      '<div class="placeholder">diff viewer goes here<br><span class="muted">GET /api/tasks/' + e(s.taskId) + "/diff</span></div></section></div>";
+  };
+
+  const scorecard = (sc) => {
+    const impl = sc.implementers.map((r) => "<tr><td>" + e(r.provider) + " / " + e(r.model) + "</td><td>" + r.tasks + "</td><td>" + r.passed + "</td><td>" + B.pct(r.firstTryPassRate) + "</td><td>" + B.dec(r.meanRetries) + "</td><td>" + B.ms(r.meanDurationMs) + "</td><td>" + B.num(r.inputTokens) + "</td><td>" + B.num(r.outputTokens) + "</td></tr>").join("");
+    const rev = sc.reviewers.map((r) => "<tr><td>" + e(r.provider) + " / " + e(r.model) + "</td><td>" + r.reviews + "</td><td>" + r.blocker + "</td><td>" + r.major + "</td><td>" + r.minor + "</td><td>" + r.nit + "</td></tr>").join("");
+    return '<div class="crumbs"><a href="#/">&larr; tasks</a> <span class="kbd">Esc</span></div><h1>Scorecard</h1><p class="sum">Finished tasks only. Excluded: ' + sc.excluded.interrupted + " interrupted, " + sc.excluded.unreadable + " unreadable.</p>" +
+      "<h2>Implementers</h2><div class=\"scroll\"><table class=\"sc\"><thead><tr><th>provider / model</th><th>tasks</th><th>passed</th><th>1st-try</th><th>retries</th><th>mean time</th><th>in tok</th><th>out tok</th></tr></thead><tbody>" + impl + "</tbody></table></div>" +
+      "<h2>Reviewers</h2><div class=\"scroll\"><table class=\"sc\"><thead><tr><th>provider / model</th><th>reviews</th><th>blocker</th><th>major</th><th>minor</th><th>nit</th></tr></thead><tbody>" + rev + "</tbody></table></div>" +
+      '<p class="foot">1st-try = passed with exactly one attempt. retries = mean retry attempts per task. A sample this small shows layout, not model quality.</p>';
+  };
+
+  const missing = (id) => '<div class="crumbs"><a href="#/">&larr; tasks</a></div><p>No task with id ' + e(id) + ".</p>";
+  B.start({ list, detail, scorecard, missing });
+})();
+</script>
+</body>
+</html>

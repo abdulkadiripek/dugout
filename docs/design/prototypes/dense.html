@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ajan Panosu · Dense prototype</title>
+<style>
+:root{
+  --bg:#f5f5f2;--panel:#ffffff;--fg:#1b1c1a;--muted:#5a5c57;--line:#d5d6cf;--line2:#e5e6e0;--hover:#ecece6;--focus:#1d4ed8;
+  --passed:#0b6a2b;--needs_review:#8a4a00;--failed:#b3261e;--interrupted:#4a5260;--unreadable:#6b21a8;
+  --passed-bg:#e3f3e8;--needs_review-bg:#fbeed9;--failed-bg:#fbe4e2;--interrupted-bg:#e6e8ec;--unreadable-bg:#f0e6f9;
+  --link:#1d4ed8;--code:#f0f0ea;color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d1013;--panel:#13171b;--fg:#d6dae0;--muted:#8d97a3;--line:#262c33;--line2:#1d2227;--hover:#1a2026;--focus:#7cb7ff;
+  --passed:#4ade80;--needs_review:#fbbf24;--failed:#ff8a80;--interrupted:#a3adbb;--unreadable:#c99bff;
+  --passed-bg:#10271a;--needs_review-bg:#2b2208;--failed-bg:#2e1514;--interrupted-bg:#1e242b;--unreadable-bg:#25173a;
+  --link:#7cb7ff;--code:#0a0d10;color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0d1013;--panel:#13171b;--fg:#d6dae0;--muted:#8d97a3;--line:#262c33;--line2:#1d2227;--hover:#1a2026;--focus:#7cb7ff;
+  --passed:#4ade80;--needs_review:#fbbf24;--failed:#ff8a80;--interrupted:#a3adbb;--unreadable:#c99bff;
+  --passed-bg:#10271a;--needs_review-bg:#2b2208;--failed-bg:#2e1514;--interrupted-bg:#1e242b;--unreadable-bg:#25173a;
+  --link:#7cb7ff;--code:#0a0d10;color-scheme:dark}
+*{box-sizing:border-box}
+html{font-size:13px}
+body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.45 ui-monospace,"SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;-webkit-text-size-adjust:100%}
+a{color:var(--link);text-decoration:none}
+a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+button{font:inherit;color:inherit;background:none;border:1px solid var(--line);padding:2px 8px;cursor:pointer;border-radius:2px}
+button:hover{background:var(--hover)}
+.bar{display:flex;align-items:center;gap:16px;padding:6px 16px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:2;flex-wrap:wrap}
+.brand{font-weight:700;letter-spacing:.02em}
+.brand span{color:var(--muted);font-weight:400}
+.bar nav{display:flex;gap:4px;flex:1}
+.bar nav a{padding:2px 8px;color:var(--muted);border:1px solid transparent}
+.bar nav a[aria-current="page"]{color:var(--fg);border-color:var(--line);background:var(--bg)}
+main{padding:12px 16px 48px;max-width:1280px;margin:0 auto;outline:none}
+h1,h2,h3{margin:0;font-size:13px}
+h2{text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;font-size:11px;padding:0 0 4px;border-bottom:1px solid var(--line);margin:18px 0 8px}
+.muted{color:var(--muted)}
+.st{display:inline-flex;gap:5px;align-items:center;font-weight:600;white-space:nowrap}
+.st i{font-style:normal;width:14px;text-align:center}
+.st.passed{color:var(--passed)}.st.needs_review{color:var(--needs_review)}.st.failed{color:var(--failed)}.st.interrupted{color:var(--interrupted)}.st.unreadable{color:var(--unreadable)}
+.tag{display:inline-block;padding:0 6px;border:1px solid currentColor;border-radius:2px;font-size:11px;line-height:17px;white-space:nowrap}
+.tag.passed{color:var(--passed);background:var(--passed-bg)}.tag.needs_review{color:var(--needs_review);background:var(--needs_review-bg)}.tag.failed{color:var(--failed);background:var(--failed-bg)}.tag.interrupted{color:var(--interrupted);background:var(--interrupted-bg)}.tag.unreadable{color:var(--unreadable);background:var(--unreadable-bg)}
+.filters{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;margin-bottom:10px}
+.group{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.group>b{color:var(--muted);font-weight:400;margin-right:2px}
+.group button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.table{border:1px solid var(--line);background:var(--panel)}
+.row{display:grid;grid-template-columns:118px 190px minmax(0,1fr) 110px 40px 62px 108px 82px;gap:0 12px;align-items:center;padding:3px 10px;border-bottom:1px solid var(--line2);color:var(--fg)}
+.row:last-child{border-bottom:0}
+a.row:hover{background:var(--hover);text-decoration:none}
+a.row:focus-visible{outline-offset:-2px;background:var(--hover)}
+.row.head{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-top:5px;padding-bottom:5px}
+.row .num{text-align:right;font-variant-numeric:tabular-nums}
+.row>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sum{margin:0 0 10px;color:var(--muted)}
+.empty{padding:24px;text-align:center;color:var(--muted)}
+.crumbs{margin-bottom:8px;color:var(--muted)}
+.head1{display:flex;gap:12px;flex-wrap:wrap;align-items:baseline;margin-bottom:4px}
+.head1 h1{font-size:15px;word-break:break-all}
+.goal{margin:2px 0 8px;max-width:90ch}
+dl.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;margin:0 0 4px;border:1px solid var(--line);background:var(--panel)}
+dl.meta div{padding:4px 10px;border-right:1px solid var(--line2);border-bottom:1px solid var(--line2)}
+dl.meta dt{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+dl.meta dd{margin:0;word-break:break-all}
+.cols{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:0 24px;align-items:start}
+.log{margin:0;padding:0;list-style:none;border:1px solid var(--line);background:var(--panel)}
+.log li{display:grid;grid-template-columns:62px 18px 150px minmax(0,1fr);gap:0 6px;padding:2px 10px;border-bottom:1px solid var(--line2)}
+.log li:last-child{border-bottom:0}
+.log .t{color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.log .k{font-weight:600}
+.log .x{overflow-wrap:anywhere}
+.log li.mute .k,.log li.mute .x{color:var(--muted);font-weight:400}
+.log li.ok .k{color:var(--passed)}.log li.bad .k{color:var(--failed)}.log li.warn .k{color:var(--needs_review)}.log li.info .k{color:var(--link)}
+.att{border:1px solid var(--line);background:var(--panel);margin-bottom:8px}
+.att header{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;padding:4px 10px;border-bottom:1px solid var(--line2);background:var(--hover)}
+.att .body{padding:4px 10px}
+.kv{display:flex;flex-wrap:wrap;gap:0 16px;color:var(--muted)}
+.kv b{color:var(--fg);font-weight:500}
+pre{margin:6px 0 2px;padding:6px 8px;background:var(--code);border:1px solid var(--line2);overflow:auto;white-space:pre-wrap;word-break:break-word;font:inherit}
+.issue{display:grid;grid-template-columns:78px minmax(0,1fr);gap:0 8px;padding:4px 10px;border-bottom:1px solid var(--line2)}
+.issue:last-child{border-bottom:0}
+.issue .loc{color:var(--muted);overflow-wrap:anywhere}
+.box{border:1px solid var(--line);background:var(--panel)}
+.box .pad{padding:6px 10px}
+.placeholder{border:1px dashed var(--muted);padding:22px 12px;text-align:center;color:var(--muted);background:repeating-linear-gradient(135deg,transparent 0 8px,var(--line2) 8px 9px)}
+table.sc{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line)}
+table.sc th,table.sc td{padding:4px 10px;text-align:right;border-bottom:1px solid var(--line2);white-space:nowrap}
+table.sc th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;border-bottom:1px solid var(--line)}
+table.sc th:first-child,table.sc td:first-child{text-align:left}
+table.sc td{font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto}
+.foot{margin-top:18px;color:var(--muted)}
+.kbd{border:1px solid var(--line);padding:0 4px;border-radius:2px;color:var(--fg)}
+@media (max-width:1000px){
+  .cols{grid-template-columns:minmax(0,1fr)}
+  .row{grid-template-columns:110px minmax(0,1fr) 90px 40px 62px;grid-template-areas:"st id id id dur" "goal goal goal goal goal" "prov prov att tok date";padding:5px 10px;gap:0 8px}
+  .row.head{display:none}
+  .row .c-st{grid-area:st}.row .c-id{grid-area:id}.row .c-goal{grid-area:goal;color:var(--muted)}.row .c-prov{grid-area:prov}.row .c-att{grid-area:att}.row .c-dur{grid-area:dur}.row .c-tok{grid-area:tok}.row .c-date{grid-area:date}
+  .row .c-id{text-align:left}
+}
+@media (max-width:520px){
+  .row{grid-template-columns:104px minmax(0,1fr) auto;grid-template-areas:"st id dur" "goal goal goal" "prov att tok" "date date date"}
+  .log li{grid-template-columns:54px 16px minmax(0,1fr);grid-template-areas:"t i k" ". . x"}
+  .log li .t{grid-area:t}.log li .i{grid-area:i}.log li .k{grid-area:k}.log li .x{grid-area:x}
+  .issue{grid-template-columns:minmax(0,1fr)}
+  .bar{gap:8px}
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="brand">panosu<span>/board</span></div>
+  <nav aria-label="Main"><a href="#/" data-nav="list">tasks</a><a href="#/scorecard" data-nav="scorecard">scorecard</a></nav>
+  <button type="button" data-theme-toggle>Dark theme</button>
+</header>
+<main id="app" tabindex="-1"></main>
+<script id="board-data" type="application/json">{"tasks":[{"summary":{"taskId":"live-smoke-e0cf","packageId":"live-smoke","goal":"Create a file hello.txt in the repository root whose content is exactly the word hi followed by a newline.","status":"passed","providers":["codex"],"attempts":1,"startedAt":"2026-10-31T18:54:40.487Z","durationMs":12346,"tokens":{"input":36519,"output":119},"review":{"verdict":"approve","counts":{"blocker":0,"major":0,"minor":0,"nit":0}},"branch":"panosu/live-smoke-e0cf","baseRef":"main"},"events":[{"schemaVersion":1,"seq":0,"ts":"2026-10-31T18:54:40.487Z","taskId":"live-smoke-e0cf","type":"task.created","package":{"id":"live-smoke","goal":"Create a file hello.txt in the repository root whose content is exactly the word hi followed by a newline.","files_to_read":[],"constraints":["Do not modify any other file."],"acceptance":["hello.txt exists and contains only the word hi."],"verify":"grep -qx hi hello.txt","max_retries":1,"review":true,"providers":["codex","claude"]}},{"schemaVersion":1,"seq":1,"ts":"2026-10-31T18:54:40.488Z","taskId":"live-smoke-e0cf","type":"worktree.created","path":".worktrees/live-smoke-e0cf","branch":"panosu/live-smoke-e0cf","baseRef":"main"},{"schemaVersion":1,"seq":2,"ts":"2026-10-31T18:54:40.489Z","taskId":"live-smoke-e0cf","type":"attempt.started","attempt":1,"reason":"initial","provider":"codex","model":"gpt-6-luna"},{"schemaVersion":1,"seq":3,"ts":"2026-10-31T18:54:43.420Z","taskId":"live-smoke-e0cf","type":"provider.message","attempt":1,"text":"I’ll create only `hello.txt` at the repository root, then run the requested grep check."},{"schemaVersion":1,"seq":4,"ts":"2026-10-31T18:54:43.919Z","taskId":"live-smoke-e0cf","type":"provider.tool","attempt":1,"name":"command","summary":"/usr/bin/bash -lc \"printf 'hi\\\\n' > hello.txt && grep -qx hi hello.txt\""},{"schemaVersion":1,"seq":5,"ts":"2026-10-31T18:54:45.680Z","taskId":"live-smoke-e0cf","type":"provider.message","attempt":1,"text":"Created `hello.txt` with exactly `hi` followed by a newline. `grep -qx hi hello.txt` passed."},{"schemaVersion":1,"seq":6,"ts":"2026-10-31T18:54:45.693Z","taskId":"live-smoke-e0cf","type":"provider.usage","attempt":1,"inputTokens":36519,"outputTokens":119},{"schemaVersion":1,"seq":7,"ts":"2026-10-31T18:54:46.894Z","taskId":"live-smoke-e0cf","type":"attempt.finished","attempt":1,"status":"completed","exitReason":"ok","durationMs":6404.418406},{"schemaVersion":1,"seq":8,"ts":"2026-10-31T18:54:46.896Z","taskId":"live-smoke-e0cf","type":"verify.started","attempt":1,"command":"grep -qx hi hello.txt"},{"schemaVersion":1,"seq":9,"ts":"2026-10-31T18:54:46.910Z","taskId":"live-smoke-e0cf","type":"verify.finished","attempt":1,"passed":true,"exitCode":0,"durationMs":6.840212000000065,"outputTail":""},{"schemaVersion":1,"seq":10,"ts":"2026-10-31T18:54:46.912Z","taskId":"live-smoke-e0cf","type":"review.started","provider":"claude","model":"claude-haiku-5-5"},{"schemaVersion":1,"seq":11,"ts":"2026-10-31T18:54:52.829Z","taskId":"live-smoke-e0cf","type":"review.finished","provider":"claude","model":"claude-haiku-5-5","result":{"verdict":"approve","summary":"The staged diff creates hello.txt in the repository root with a single added line \"hi\". The hunk has no \"\\ No newline at end of file\" marker, so the file ends in a newline, matching the goal of exactly \"hi\" followed by a newline. The acceptance criterion (the file exists and contains only \"hi\") is met. I reviewed the diff text only and did not inspect the staged blob directly.","issues":[]}},{"schemaVersion":1,"seq":12,"ts":"2026-10-31T18:54:52.833Z","taskId":"live-smoke-e0cf","type":"task.finished","status":"passed","attempts":1,"providers":["codex"],"diffStat":{"files":1,"additions":1,"deletions":0},"durationMs":12346}]},{"summary":{"taskId":"add-cache-m3n4","packageId":"add-cache","goal":"Add an in-memory cache to the log reader.","status":"failed","providers":[],"attempts":0,"startedAt":"2026-01-20T09:00:00.000Z","durationMs":2100,"tokens":{"input":0,"output":0},"review":null,"branch":"panosu/add-cache-m3n4","baseRef":"main"},"events":[{"schemaVersion":1,"seq":0,"ts":"2026-01-20T09:00:00.000Z","taskId":"add-cache-m3n4","type":"task.created","package":{"id":"add-cache","goal":"Add an in-memory cache to the log reader.","files_to_read":["packages/server/src/reader.ts"],"constraints":[],"acceptance":["Second read of an unchanged log does not hit the disk"],"setup":"pnpm install --offline --frozen-lockfile","verify":"pnpm test","max_retries":2,"review":true,"providers":["codex","claude"]}},{"schemaVersion":1,"seq":1,"ts":"2026-01-20T09:00:01.000Z","taskId":"add-cache-m3n4","type":"worktree.created","path":".worktrees/add-cache-m3n4","branch":"panosu/add-cache-m3n4","baseRef":"main"},{"schemaVersion":1,"seq":2,"ts":"2026-01-20T09:00:02.000Z","taskId":"add-cache-m3n4","type":"setup.finished","passed":false,"exitCode":1,"durationMs":1000,"outputTail":"ERR_PNPM_NO_OFFLINE_TARBALL A required dependency is missing from the local store."},{"schemaVersion":1,"seq":3,"ts":"2026-01-20T09:00:02.100Z","taskId":"add-cache-m3n4","type":"task.finished","status":"failed","attempts":0,"providers":[],"diffStat":{"files":0,"additions":0,"deletions":0},"durationMs":2100}]},{"summary":{"taskId":"add-cache-k1l2","packageId":"add-cache","goal":"Add an in-memory cache to the log reader.","status":"failed","providers":["codex","claude"],"attempts":2,"startedAt":"2026-01-19T09:00:00.000Z","durationMs":4100,"tokens":{"input":0,"output":0},"review":null,"branch":"panosu/add-cache-k1l2","baseRef":"main"},"events":[{"schemaVersion":1,"seq":0,"ts":"2026-01-19T09:00:00.000Z","taskId":"add-cache-k1l2","type":"task.created","package":{"id":"add-cache","goal":"Add an in-memory cache to the log reader.","files_to_read":["packages/server/src/reader.ts"],"constraints":[],"acceptance":["Second read of an unchanged log does not hit the disk"],"verify":"pnpm test","max_retries":2,"review":true,"providers":["codex","claude"]}},{"schemaVersion":1,"seq":1,"ts":"2026-01-19T09:00:01.000Z","taskId":"add-cache-k1l2","type":"worktree.created","path":".worktrees/add-cache-k1l2","branch":"panosu/add-cache-k1l2","baseRef":"main"},{"schemaVersion":1,"seq":2,"ts":"2026-01-19T09:00:02.000Z","taskId":"add-cache-k1l2","type":"attempt.started","attempt":1,"reason":"initial","provider":"codex","model":"gpt-6-astra"},{"schemaVersion":1,"seq":3,"ts":"2026-01-19T09:00:03.000Z","taskId":"add-cache-k1l2","type":"attempt.finished","attempt":1,"status":"failed","exitReason":"rate_limit","durationMs":1000},{"schemaVersion":1,"seq":4,"ts":"2026-01-19T09:00:03.100Z","taskId":"add-cache-k1l2","type":"fallback.triggered","from":"codex","to":"claude","reason":"rate_limit"},{"schemaVersion":1,"seq":5,"ts":"2026-01-19T09:00:03.200Z","taskId":"add-cache-k1l2","type":"attempt.started","attempt":2,"reason":"fallback","provider":"claude","model":"claude-sonnet-5-5"},{"schemaVersion":1,"seq":6,"ts":"2026-01-19T09:00:04.000Z","taskId":"add-cache-k1l2","type":"attempt.finished","attempt":2,"status":"failed","exitReason":"auth","durationMs":800},{"schemaVersion":1,"seq":7,"ts":"2026-01-19T09:00:04.100Z","taskId":"add-cache-k1l2","type":"task.finished","status":"failed","attempts":2,"providers":["codex","claude"],"diffStat":{"files":0,"additions":0,"deletions":0},"durationMs":4100}]},{"summary":{"taskId":"parse-dates-i9j0","packageId":"parse-dates","goal":"Parse ISO and RFC 2822 dates in one helper.","status":"failed","providers":["codex"],"attempts":2,"startedAt":"2026-01-18T08:00:00.000Z","durationMs":82200,"tokens":{"input":0,"output":0},"review":null,"branch":"panosu/parse-dates-i9j0","baseRef":"main"},"events":[{"schemaVersion":1,"seq":0,"ts":"2026-01-18T08:00:00.000Z","taskId":"parse-dates-i9j0","type":"task.created","package":{"id":"parse-dates","goal":"Parse ISO and RFC 2822 dates in one helper.","files_to_read":["packages/core/src/dates.ts"],"constraints":[],"acceptance":["Both formats parse to the same Date"],"verify":"pnpm test","max_retries":1,"review":true,"providers":["codex","claude"]}},{"schemaVersion":1,"seq":1,"ts":"2026-01-18T08:00:01.000Z","taskId":"parse-dates-i9j0","type":"worktree.created","path":".worktrees/parse-dates-i9j0","branch":"panosu/parse-dates-i9j0","baseRef":"main"},{"schemaVersion":1,"seq":2,"ts":"2026-01-18T08:00:02.000Z","taskId":"parse-dates-i9j0","type":"attempt.started","attempt":1,"reason":"initial","provider":"codex","model":"gpt-6-astra"},{"schemaVersion":1,"seq":3,"ts":"2026-01-18T08:00:45.000Z","taskId":"parse-dates-i9j0","type":"attempt.finished","attempt":1,"status":"completed","exitReason":"ok","durationMs":43000},{"schemaVersion":1,"seq":4,"ts":"2026-01-18T08:00:45.100Z","taskId":"parse-dates-i9j0","type":"verify.started","attempt":1,"command":"pnpm test"},{"schemaVersion":1,"seq":5,"ts":"2026-01-18T08:00:48.000Z","taskId":"parse-dates-i9j0","type":"verify.finished","attempt":1,"passed":false,"exitCode":1,"durationMs":2900,"outputTail":"FAIL dates.test.ts > rfc2822\nExpected 2026-01-18T08:00:00.000Z, received Invalid Date"},{"schemaVersion":1,"seq":6,"ts":"2026-01-18T08:00:48.200Z","taskId":"parse-dates-i9j0","type":"attempt.started","attempt":2,"reason":"retry","provider":"codex","model":"gpt-6-astra"},{"schemaVersion":1,"seq":7,"ts":"2026-01-18T08:01:20.000Z","taskId":"parse-dates-i9j0","type":"attempt.finished","attempt":2,"status":"completed","exitReason":"ok","durationMs":32000},{"schemaVersion":1,"seq":8,"ts":"2026-01-18T08:01:20.100Z","taskId":"parse-dates-i9j0","type":"verify.started","attempt":2,"command":"pnpm test"},{"schemaVersion":1,"seq":9,"ts":"2026-01-18T08:01:23.000Z","taskId":"parse-dates-i9j0","type":"verify.finished","attempt":2,"passed":false,"exitCode":1,"durationMs":2800,"outputTail":"FAIL dates.test.ts > rfc2822\nExpected 2026-01-18T08:00:00.000Z, received Invalid Date"},{"schemaVersion":1,"seq":10,"ts":"2026-01-18T08:01:23.200Z","taskId":"parse-dates-i9j0","type":"task.finished","status":"failed","attempts":2,"providers":["codex"],"diffStat":{"files":1,"additions":22,"deletions":3},"durationMs":82200}]},{"summary":{"taskId":"add-retry-g7h8","packageId":"add-retry","goal":"Add retry with backoff to the fetch helper.","status":"needs_review","providers":["codex"],"attempts":1,"startedAt":"2026-01-17T14:00:00.000Z","durationMs":110100,"tokens":{"input":15800,"output":1900},"review":{"verdict":"changes_requested","counts":{"blocker":0,"major":1,"minor":1,"nit":0}},"branch":"panosu/add-retry-g7h8","baseRef":"main"},"events":[{"schemaVersion":1,"seq":0,"ts":"2026-01-17T14:00:00.000Z","taskId":"add-retry-g7h8","type":"task.created","package":{"id":"add-retry","goal":"Add retry with backoff to the fetch helper.","files_to_read":["packages/core/src/fetch.ts"],"constraints":["Max 3 retries"],"acceptance":["Retries on 503 up to 3 times","Does not retry on 400"],"verify":"pnpm test","max_retries":1,"review":true,"providers":["codex","claude"]}},{"schemaVersion":1,"seq":1,"ts":"2026-01-17T14:00:01.000Z","taskId":"add-retry-g7h8","type":"worktree.created","path":".worktrees/add-retry-g7h8","branch":"panosu/add-retry-g7h8","baseRef":"main"},{"schemaVersion":1,"seq":2,"ts":"2026-01-17T14:00:02.000Z","taskId":"add-retry-g7h8","type":"attempt.started","attempt":1,"reason":"initial","provider":"codex","model":"gpt-6-astra"},{"schemaVersion":1,"seq":3,"ts":"2026-01-17T14:00:50.000Z","taskId":"add-retry-g7h8","type":"provider.tool","attempt":1,"name":"edit","summary":"packages/core/src/fetch.ts"},{"schemaVersion":1,"seq":4,"ts":"2026-01-17T14:01:10.000Z","taskId":"add-retry-g7h8","type":"provider.usage","attempt":1,"inputTokens":15800,"outputTokens":1900},{"schemaVersion":1,"seq":5,"ts":"2026-01-17T14:01:10.100Z","taskId":"add-retry-g7h8","type":"attempt.finished","attempt":1,"status":"completed","exitReason":"ok","durationMs":68000},{"schemaVersion":1,"seq":6,"ts":"2026-01-17T14:01:10.200Z","taskId":"add-retry-g7h8","type":"verify.started","attempt":1,"command":"pnpm test"},{"schemaVersion":1,"seq":7,"ts":"2026-01-17T14:01:13.000Z","taskId":"add-retry-g7h8","type":"verify.finished","attempt":1,"passed":true,"exitCode":0,"durationMs":2800,"outputTail":"Tests  7 passed (7)"},{"schemaVersion":1,"seq":8,"ts":"2026-01-17T14:01:13.100Z","taskId":"add-retry-g7h8","type":"review.started","provider":"claude","model":"claude-sonnet-5-5"},{"schemaVersion":1,"seq":9,"ts":"2026-01-17T14:01:50.000Z","taskId":"add-retry-g7h8","type":"review.finished","provider":"claude","model":"claude-sonnet-5-5","result":{"verdict":"changes_requested","summary":"Works for the tested cases but the backoff is unbounded and a thrown network error is not retried.","issues":[{"file":"packages/core/src/fetch.ts","line":27,"severity":"major","message":"Network errors (thrown, no status) skip the retry path, so transient failures are not retried."},{"file":"packages/core/src/fetch.ts","line":31,"severity":"minor","message":"Backoff has no upper cap; cap the delay."}]}},{"schemaVersion":1,"seq":10,"ts":"2026-01-17T14:01:50.100Z","taskId":"add-retry-g7h8","type":"task.finished","status":"needs_review","attempts":1,"providers":["codex"],"diffStat":{"files":2,"additions":36,"deletions":4},"durationMs":110100}]},{"summary":{"taskId":"add-csv-export-e5f6","packageId":"add-csv-export","goal":"Add a CSV export for the task list.","status":"passed","providers":["codex","claude"],"attempts":2,"startedAt":"2026-01-16T09:00:00.000Z","durationMs":122100,"tokens":{"input":24500,"output":3300},"review":{"verdict":"approve","counts":{"blocker":0,"major":0,"minor":0,"nit":1}},"branch":"panosu/add-csv-export-e5f6","baseRef":"main"},"events":[{"schemaVersion":1,"seq":0,"ts":"2026-01-16T09:00:00.000Z","taskId":"add-csv-export-e5f6","type":"task.created","package":{"id":"add-csv-export","goal":"Add a CSV export for the task list.","files_to_read":["packages/server/src/routes/tasks.ts"],"constraints":["No new dependencies"],"acceptance":["GET /api/tasks.csv returns one row per task with a header"],"verify":"pnpm test","max_retries":2,"review":true,"providers":["codex","claude"]}},{"schemaVersion":1,"seq":1,"ts":"2026-01-16T09:00:01.000Z","taskId":"add-csv-export-e5f6","type":"worktree.created","path":".worktrees/add-csv-export-e5f6","branch":"panosu/add-csv-export-e5f6","baseRef":"main"},{"schemaVersion":1,"seq":2,"ts":"2026-01-16T09:00:02.000Z","taskId":"add-csv-export-e5f6","type":"attempt.started","attempt":1,"reason":"initial","provider":"codex","model":"gpt-6-astra"},{"schemaVersion":1,"seq":3,"ts":"2026-01-16T09:00:04.000Z","taskId":"add-csv-export-e5f6","type":"attempt.finished","attempt":1,"status":"failed","exitReason":"rate_limit","durationMs":2000},{"schemaVersion":1,"seq":4,"ts":"2026-01-16T09:00:04.100Z","taskId":"add-csv-export-e5f6","type":"fallback.triggered","from":"codex","to":"claude","reason":"rate_limit"},{"schemaVersion":1,"seq":5,"ts":"2026-01-16T09:00:04.200Z","taskId":"add-csv-export-e5f6","type":"attempt.started","attempt":2,"reason":"fallback","provider":"claude","model":"claude-sonnet-5-5"},{"schemaVersion":1,"seq":6,"ts":"2026-01-16T09:00:40.000Z","taskId":"add-csv-export-e5f6","type":"provider.tool","attempt":2,"name":"edit","summary":"packages/server/src/routes/tasks.ts"},{"schemaVersion":1,"seq":7,"ts":"2026-01-16T09:01:25.000Z","taskId":"add-csv-export-e5f6","type":"provider.usage","attempt":2,"inputTokens":24500,"outputTokens":3300},{"schemaVersion":1,"seq":8,"ts":"2026-01-16T09:01:25.100Z","taskId":"add-csv-export-e5f6","type":"attempt.finished","attempt":2,"status":"completed","exitReason":"ok","durationMs":81000},{"schemaVersion":1,"seq":9,"ts":"2026-01-16T09:01:25.200Z","taskId":"add-csv-export-e5f6","type":"verify.started","attempt":2,"command":"pnpm test"},{"schemaVersion":1,"seq":10,"ts":"2026-01-16T09:01:29.000Z","taskId":"add-csv-export-e5f6","type":"verify.finished","attempt":2,"passed":true,"exitCode":0,"durationMs":3800,"outputTail":"Tests  14 passed (14)"},{"schemaVersion":1,"seq":11,"ts":"2026-01-16T09:01:29.100Z","taskId":"add-csv-export-e5f6","type":"review.started","provider":"codex","model":"gpt-6.1-sol"},{"schemaVersion":1,"seq":12,"ts":"2026-01-16T09:02:02.000Z","taskId":"add-csv-export-e5f6","type":"review.finished","provider":"codex","model":"gpt-6.1-sol","result":{"verdict":"approve","summary":"Correct and covered by tests.","issues":[{"file":"packages/server/src/routes/tasks.ts","line":41,"severity":"nit","message":"Extract the header row into a constant."}]}},{"schemaVersion":1,"seq":13,"ts":"2026-01-16T09:02:02.100Z","taskId":"add-csv-export-e5f6","type":"task.finished","status":"passed","attempts":2,"providers":["codex","claude"],"diffStat":{"files":2,"additions":58,"deletions":1},"durationMs":122100}]},{"summary":{"taskId":"fix-pagination-c3d4","packageId":"fix-pagination","goal":"Fix the off-by-one in page slicing.","status":"passed","providers":["codex"],"attempts":2,"startedAt":"2026-01-15T11:00:00.000Z","durationMs":94100,"tokens":{"input":9100,"output":640},"review":null,"branch":"panosu/fix-pagination-c3d4","baseRef":"main"},"events":[{"schemaVersion":1,"seq":0,"ts":"2026-01-15T11:00:00.000Z","taskId":"fix-pagination-c3d4","type":"task.created","package":{"id":"fix-pagination","goal":"Fix the off-by-one in page slicing.","files_to_read":["packages/core/src/paginate.ts"],"constraints":["Do not change the function signature"],"acceptance":["paginate(items, 2, 10) returns items 10..19"],"verify":"pnpm test","max_retries":2,"review":false,"providers":["codex","claude"]}},{"schemaVersion":1,"seq":1,"ts":"2026-01-15T11:00:01.000Z","taskId":"fix-pagination-c3d4","type":"worktree.created","path":".worktrees/fix-pagination-c3d4","branch":"panosu/fix-pagination-c3d4","baseRef":"main"},{"schemaVersion":1,"seq":2,"ts":"2026-01-15T11:00:02.000Z","taskId":"fix-pagination-c3d4","type":"attempt.started","attempt":1,"reason":"initial","provider":"codex","model":"gpt-6-astra"},{"schemaVersion":1,"seq":3,"ts":"2026-01-15T11:00:30.000Z","taskId":"fix-pagination-c3d4","type":"provider.tool","attempt":1,"name":"edit","summary":"packages/core/src/paginate.ts"},{"schemaVersion":1,"seq":4,"ts":"2026-01-15T11:00:52.000Z","taskId":"fix-pagination-c3d4","type":"attempt.finished","attempt":1,"status":"completed","exitReason":"ok","durationMs":50000},{"schemaVersion":1,"seq":5,"ts":"2026-01-15T11:00:52.100Z","taskId":"fix-pagination-c3d4","type":"verify.started","attempt":1,"command":"pnpm test"},{"schemaVersion":1,"seq":6,"ts":"2026-01-15T11:00:55.000Z","taskId":"fix-pagination-c3d4","type":"verify.finished","attempt":1,"passed":false,"exitCode":1,"durationMs":2900,"outputTail":"FAIL paginate.test.ts > last page\nExpected 3 items, received 4"},{"schemaVersion":1,"seq":7,"ts":"2026-01-15T11:00:55.200Z","taskId":"fix-pagination-c3d4","type":"attempt.started","attempt":2,"reason":"retry","provider":"codex","model":"gpt-6-astra"},{"schemaVersion":1,"seq":8,"ts":"2026-01-15T11:01:20.000Z","taskId":"fix-pagination-c3d4","type":"provider.tool","attempt":2,"name":"edit","summary":"packages/core/src/paginate.ts"},{"schemaVersion":1,"seq":9,"ts":"2026-01-15T11:01:31.000Z","taskId":"fix-pagination-c3d4","type":"provider.usage","attempt":2,"inputTokens":9100,"outputTokens":640},{"schemaVersion":1,"seq":10,"ts":"2026-01-15T11:01:31.100Z","taskId":"fix-pagination-c3d4","type":"attempt.finished","attempt":2,"status":"completed","exitReason":"ok","durationMs":36000},{"schemaVersion":1,"seq":11,"ts":"2026-01-15T11:01:31.200Z","taskId":"fix-pagination-c3d4","type":"verify.started","attempt":2,"command":"pnpm test"},{"schemaVersion":1,"seq":12,"ts":"2026-01-15T11:01:34.000Z","taskId":"fix-pagination-c3d4","type":"verify.finished","attempt":2,"passed":true,"exitCode":0,"durationMs":2800,"outputTail":"Tests  9 passed (9)"},{"schemaVersion":1,"seq":13,"ts":"2026-01-15T11:01:34.100Z","taskId":"fix-pagination-c3d4","type":"task.finished","status":"passed","attempts":2,"providers":["codex"],"diffStat":{"files":1,"additions":3,"deletions":2},"durationMs":94100}]},{"summary":{"taskId":"add-slugify-a1b2","packageId":"add-slugify","goal":"Add a slugify helper.","status":"passed","providers":["codex"],"attempts":1,"startedAt":"2026-01-15T10:00:00.000Z","durationMs":131100,"tokens":{"input":18200,"output":2100},"review":{"verdict":"approve","counts":{"blocker":0,"major":0,"minor":0,"nit":0}},"branch":"panosu/add-slugify-a1b2","baseRef":"main"},"events":[{"schemaVersion":1,"seq":0,"ts":"2026-01-15T10:00:00.000Z","taskId":"add-slugify-a1b2","type":"task.created","package":{"id":"add-slugify","goal":"Add a slugify helper.","files_to_read":["packages/core/src/text.ts"],"constraints":["No new dependencies"],"acceptance":["slugify('Hello World') returns 'hello-world'"],"verify":"pnpm test","max_retries":2,"review":true,"providers":["codex","claude"]}},{"schemaVersion":1,"seq":1,"ts":"2026-01-15T10:00:01.000Z","taskId":"add-slugify-a1b2","type":"worktree.created","path":".worktrees/add-slugify-a1b2","branch":"panosu/add-slugify-a1b2","baseRef":"main"},{"schemaVersion":1,"seq":2,"ts":"2026-01-15T10:00:02.000Z","taskId":"add-slugify-a1b2","type":"attempt.started","attempt":1,"reason":"initial","provider":"codex","model":"gpt-6-astra"},{"schemaVersion":1,"seq":3,"ts":"2026-01-15T10:00:20.000Z","taskId":"add-slugify-a1b2","type":"provider.tool","attempt":1,"name":"edit","summary":"packages/core/src/text.ts"},{"schemaVersion":1,"seq":4,"ts":"2026-01-15T10:00:41.000Z","taskId":"add-slugify-a1b2","type":"provider.tool","attempt":1,"name":"edit","summary":"packages/core/src/text.test.ts"},{"schemaVersion":1,"seq":5,"ts":"2026-01-15T10:01:36.000Z","taskId":"add-slugify-a1b2","type":"provider.usage","attempt":1,"inputTokens":18200,"outputTokens":2100},{"schemaVersion":1,"seq":6,"ts":"2026-01-15T10:01:36.100Z","taskId":"add-slugify-a1b2","type":"attempt.finished","attempt":1,"status":"completed","exitReason":"ok","durationMs":94000},{"schemaVersion":1,"seq":7,"ts":"2026-01-15T10:01:36.200Z","taskId":"add-slugify-a1b2","type":"verify.started","attempt":1,"command":"pnpm test"},{"schemaVersion":1,"seq":8,"ts":"2026-01-15T10:01:39.400Z","taskId":"add-slugify-a1b2","type":"verify.finished","attempt":1,"passed":true,"exitCode":0,"durationMs":3200,"outputTail":"Tests  6 passed (6)"},{"schemaVersion":1,"seq":9,"ts":"2026-01-15T10:01:39.500Z","taskId":"add-slugify-a1b2","type":"review.started","provider":"claude","model":"claude-sonnet-5-5"},{"schemaVersion":1,"seq":10,"ts":"2026-01-15T10:02:11.000Z","taskId":"add-slugify-a1b2","type":"review.finished","provider":"claude","model":"claude-sonnet-5-5","result":{"verdict":"approve","summary":"Small, well-tested helper; matches acceptance.","issues":[]}},{"schemaVersion":1,"seq":11,"ts":"2026-01-15T10:02:11.100Z","taskId":"add-slugify-a1b2","type":"task.finished","status":"passed","attempts":1,"providers":["codex"],"diffStat":{"files":2,"additions":41,"deletions":0},"durationMs":131100}]}],"scorecard":{"implementers":[{"provider":"codex","model":"gpt-6-astra","tasks":6,"passed":2,"firstTryPassRate":0.1667,"meanRetries":0.3333,"meanDurationMs":54333.3333,"inputTokens":43100,"outputTokens":4640},{"provider":"claude","model":"claude-sonnet-5-5","tasks":2,"passed":1,"firstTryPassRate":0,"meanRetries":0,"meanDurationMs":40900,"inputTokens":24500,"outputTokens":3300},{"provider":"codex","model":"gpt-6-luna","tasks":1,"passed":1,"firstTryPassRate":1,"meanRetries":0,"meanDurationMs":6404.4184,"inputTokens":36519,"outputTokens":119}],"reviewers":[{"provider":"claude","model":"claude-sonnet-5-5","reviews":2,"blocker":0,"major":1,"minor":1,"nit":0},{"provider":"claude","model":"claude-haiku-5-5","reviews":1,"blocker":0,"major":0,"minor":0,"nit":0},{"provider":"codex","model":"gpt-6.1-sol","reviews":1,"blocker":0,"major":0,"minor":0,"nit":1}],"excluded":{"interrupted":0,"unreadable":0}}}</script>
+<script>
+globalThis.Board = (() => {
+  const DATA = JSON.parse(document.getElementById("board-data").textContent);
+  const STATUS = {
+    passed: { label: "Passed", icon: "✓" },
+    needs_review: { label: "Needs review", icon: "!" },
+    failed: { label: "Failed", icon: "✕" },
+    interrupted: { label: "Interrupted", icon: "…" },
+    unreadable: { label: "Unreadable", icon: "?" },
+  };
+  const STATUS_ORDER = ["passed", "needs_review", "failed", "interrupted", "unreadable"];
+  const state = { status: "all", provider: "all" };
+  let views = null;
+
+  const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+  const ms = (value) => {
+    if (value === null || value === undefined) return "—";
+    if (value < 1000) return Math.round(value) + "ms";
+    const s = value / 1000;
+    if (s < 60) return (s < 10 ? s.toFixed(1) : Math.round(s)) + "s";
+    const m = Math.floor(s / 60);
+    const rest = Math.round(s - m * 60);
+    if (m < 60) return m + "m " + String(rest).padStart(2, "0") + "s";
+    return Math.floor(m / 60) + "h " + String(m % 60).padStart(2, "0") + "m";
+  };
+  const num = (value) => {
+    if (value >= 10000) return (value / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+    return value.toLocaleString("en-US");
+  };
+  const tokens = (t) => ({ input: num(t.input), output: num(t.output), total: num(t.input + t.output) });
+  const pct = (value) => Math.round(value * 100) + "%";
+  const dec = (value) => (Math.round(value * 100) / 100).toString();
+  const date = (iso) => (iso ? iso.slice(0, 10) : "—");
+  const dateTime = (iso) => (iso ? iso.slice(0, 10) + " " + iso.slice(11, 16) + " UTC" : "—");
+  const offset = (iso, start) => {
+    const d = Date.parse(iso) - Date.parse(start);
+    if (!(d >= 0)) return "+0s";
+    if (d < 1000) return "+" + Math.round(d) + "ms";
+    return "+" + ms(d).replace(/ /g, "");
+  };
+
+  const allTasks = () => DATA.tasks;
+  const findTask = (id) => DATA.tasks.find((t) => t.summary.taskId === id);
+  const providersAll = () => [...new Set(DATA.tasks.flatMap((t) => t.summary.providers))].sort();
+  const statusCounts = () => {
+    const counts = { all: DATA.tasks.length };
+    for (const s of STATUS_ORDER) counts[s] = DATA.tasks.filter((t) => t.summary.status === s).length;
+    return counts;
+  };
+  const filtered = () => DATA.tasks.filter((t) =>
+    (state.status === "all" || t.summary.status === state.status) &&
+    (state.provider === "all" || t.summary.providers.includes(state.provider)));
+
+  const attemptsOf = (events) => {
+    const list = [];
+    const byN = new Map();
+    for (const e of events) {
+      if (e.type === "attempt.started") {
+        const a = { n: e.attempt, provider: e.provider, model: e.model, reason: e.reason, status: null,
+          exitReason: null, durationMs: null, input: 0, output: 0, verify: null, tools: [], messages: [], startTs: e.ts };
+        byN.set(e.attempt, a);
+        list.push(a);
+      } else if ("attempt" in e && byN.has(e.attempt)) {
+        const a = byN.get(e.attempt);
+        if (e.type === "attempt.finished") { a.status = e.status; a.exitReason = e.exitReason; a.durationMs = e.durationMs; }
+        else if (e.type === "provider.usage") { a.input += e.inputTokens ?? 0; a.output += e.outputTokens ?? 0; }
+        else if (e.type === "verify.started") a.verify = { command: e.command, passed: null, exitCode: null, durationMs: null, outputTail: "" };
+        else if (e.type === "verify.finished") a.verify = { ...(a.verify ?? { command: "" }), passed: e.passed, exitCode: e.exitCode, durationMs: e.durationMs, outputTail: e.outputTail };
+        else if (e.type === "provider.tool") a.tools.push(e);
+        else if (e.type === "provider.message") a.messages.push(e);
+      }
+    }
+    return list;
+  };
+  const reviewOf = (events) => events.findLast((e) => e.type === "review.finished") ?? null;
+  const setupOf = (events) => events.find((e) => e.type === "setup.finished") ?? null;
+  const finishOf = (events) => events.findLast((e) => e.type === "task.finished") ?? null;
+
+  const describe = (e, start) => {
+    const at = offset(e.ts, start);
+    const base = { at, type: e.type, attempt: e.attempt ?? null };
+    switch (e.type) {
+      case "task.created": return { ...base, label: "Task created", text: e.package.goal, tone: "info" };
+      case "worktree.created": return { ...base, label: "Worktree", text: e.branch + " from " + e.baseRef, tone: "mute" };
+      case "setup.finished": return { ...base, label: "Setup " + (e.passed ? "passed" : "failed"), text: "exit " + e.exitCode + " in " + ms(e.durationMs) + (e.outputTail ? " · " + e.outputTail : ""), tone: e.passed ? "ok" : "bad" };
+      case "attempt.started": return { ...base, label: "Attempt " + e.attempt + " started", text: e.provider + " · " + e.model + " · " + e.reason, tone: "info" };
+      case "provider.tool": return { ...base, label: "Tool " + e.name, text: e.summary, tone: "mute" };
+      case "provider.message": return { ...base, label: "Message", text: e.text, tone: "mute" };
+      case "provider.usage": return { ...base, label: "Usage", text: num(e.inputTokens ?? 0) + " in / " + num(e.outputTokens ?? 0) + " out", tone: "mute" };
+      case "attempt.finished": return { ...base, label: "Attempt " + e.attempt + " " + e.status, text: e.exitReason + " · " + ms(e.durationMs), tone: e.status === "completed" ? "ok" : "bad" };
+      case "fallback.triggered": return { ...base, label: "Fallback", text: e.from + " → " + e.to + " (" + e.reason + ")", tone: "warn" };
+      case "verify.started": return { ...base, label: "Verify started", text: e.command, tone: "mute" };
+      case "verify.finished": return { ...base, label: "Verify " + (e.passed ? "passed" : "failed"), text: "exit " + e.exitCode + " in " + ms(e.durationMs), tone: e.passed ? "ok" : "bad" };
+      case "review.started": return { ...base, label: "Review started", text: e.provider + " · " + e.model, tone: "info" };
+      case "review.finished": return { ...base, label: "Review " + e.result.verdict.replace("_", " "), text: e.result.issues.length + " issue" + (e.result.issues.length === 1 ? "" : "s"), tone: e.result.verdict === "approve" ? "ok" : "warn" };
+      case "task.finished": return { ...base, label: "Task " + e.status.replace("_", " "), text: e.attempts + " attempt" + (e.attempts === 1 ? "" : "s") + " · " + e.diffStat.files + " files +" + e.diffStat.additions + " −" + e.diffStat.deletions + " · " + ms(e.durationMs), tone: e.status === "passed" ? "ok" : e.status === "failed" ? "bad" : "warn" };
+      default: return { ...base, label: e.type, text: "", tone: "mute" };
+    }
+  };
+
+  const route = () => {
+    const h = location.hash.replace(/^#/, "") || "/";
+    if (h === "/scorecard") return { name: "scorecard" };
+    const m = /^\/tasks\/([A-Za-z0-9][A-Za-z0-9_-]*)$/.exec(h);
+    if (m) return { name: "detail", id: m[1] };
+    return { name: "list" };
+  };
+
+  const setTheme = (theme) => {
+    document.documentElement.dataset.theme = theme;
+    try { localStorage.setItem("panosu-proto-theme", theme); } catch { /* storage may be blocked */ }
+    syncToggle();
+  };
+  const effectiveTheme = () => document.documentElement.dataset.theme ||
+    (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const syncToggle = () => {
+    const t = effectiveTheme();
+    for (const b of document.querySelectorAll("[data-theme-toggle]")) {
+      b.textContent = t === "dark" ? "Light theme" : "Dark theme";
+      b.setAttribute("aria-label", "Switch to " + (t === "dark" ? "light" : "dark") + " theme");
+    }
+  };
+
+  const render = (focusSel) => {
+    const r = route();
+    const app = document.getElementById("app");
+    let html;
+    let title = "Board";
+    if (r.name === "detail") {
+      const task = findTask(r.id);
+      html = task ? views.detail(task) : views.missing(r.id);
+      title = r.id;
+    } else if (r.name === "scorecard") { html = views.scorecard(DATA.scorecard); title = "Scorecard"; }
+    else html = views.list();
+    app.innerHTML = html;
+    document.title = title + " · Ajan Panosu";
+    for (const a of document.querySelectorAll("[data-nav]")) {
+      const on = (a.dataset.nav === "scorecard") === (r.name === "scorecard");
+      if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    }
+    syncToggle();
+    if (focusSel) { const el = app.querySelector(focusSel); if (el) el.focus(); }
+    else if (r.name !== "list" || state.fromRoute) { window.scrollTo(0, 0); app.focus({ preventScroll: true }); }
+    state.fromRoute = true;
+  };
+
+  const rows = () => [...document.querySelectorAll("[data-row]")];
+  const onKey = (ev) => {
+    if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+    const tag = ev.target.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") { if (ev.key === "Escape") ev.target.blur(); return; }
+    const r = route();
+    if (ev.key === "Escape") {
+      if (r.name !== "list") { location.hash = "#/"; ev.preventDefault(); }
+      return;
+    }
+    if (r.name !== "list") return;
+    const list = rows();
+    if (!list.length) return;
+    const i = list.indexOf(document.activeElement);
+    if (ev.key === "j" || ev.key === "ArrowDown") { list[Math.min(i + 1, list.length - 1)].focus(); ev.preventDefault(); }
+    else if (ev.key === "k" || ev.key === "ArrowUp") { list[Math.max(i - 1, 0)].focus(); ev.preventDefault(); }
+    else if (ev.key === "Enter" && i < 0) { list[0].click(); ev.preventDefault(); }
+  };
+
+  const onClick = (ev) => {
+    const t = ev.target.closest("[data-theme-toggle], [data-set-status], [data-set-provider]");
+    if (!t) return;
+    if (t.hasAttribute("data-theme-toggle")) { setTheme(effectiveTheme() === "dark" ? "light" : "dark"); return; }
+    if (t.dataset.setStatus !== undefined) state.status = t.dataset.setStatus;
+    if (t.dataset.setProvider !== undefined) state.provider = t.dataset.setProvider;
+    const sel = t.dataset.setStatus !== undefined ? '[data-set-status="' + t.dataset.setStatus + '"]' : '[data-set-provider="' + t.dataset.setProvider + '"]';
+    render(sel);
+  };
+
+  const start = (v) => {
+    views = v;
+    try {
+      const saved = localStorage.getItem("panosu-proto-theme");
+      if (saved === "light" || saved === "dark") document.documentElement.dataset.theme = saved;
+    } catch { /* storage may be blocked */ }
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("click", onClick);
+    addEventListener("hashchange", () => render());
+    render();
+  };
+
+  return { STATUS, STATUS_ORDER, state, esc, ms, num, tokens, pct, dec, date, dateTime, offset, allTasks, findTask,
+    providersAll, statusCounts, filtered, attemptsOf, reviewOf, setupOf, finishOf, describe, start };
+})();
+
+</script>
+<script>
+(() => {
+  const B = Board;
+  const e = B.esc;
+  const st = (s) => '<span class="st ' + s + '"><i aria-hidden="true">' + B.STATUS[s].icon + "</i>" + B.STATUS[s].label + "</span>";
+  const tag = (s) => '<span class="tag ' + s + '"><span aria-hidden="true">' + B.STATUS[s].icon + " </span>" + B.STATUS[s].label + "</span>";
+
+  const chip = (attr, value, label, current) =>
+    '<button type="button" ' + attr + '="' + e(value) + '" aria-pressed="' + (current === value) + '">' + e(label) + "</button>";
+
+  const list = () => {
+    const counts = B.statusCounts();
+    const items = B.filtered();
+    const statusChips = ["all", ...B.STATUS_ORDER.filter((s) => counts[s] > 0)]
+      .map((s) => chip("data-set-status", s, (s === "all" ? "all" : B.STATUS[s].label.toLowerCase()) + " " + counts[s], B.state.status)).join("");
+    const provChips = ["all", ...B.providersAll()].map((p) => chip("data-set-provider", p, p, B.state.provider)).join("");
+    const rows = items.map(({ summary: s }) => {
+      if (s.status === "unreadable") {
+        return '<a class="row" data-row href="#/tasks/' + e(s.taskId) + '"><span class="c-st">' + st(s.status) + '</span><span class="c-id">' + e(s.taskId) + '</span><span class="c-goal">' + e(s.reason) + "</span></a>";
+      }
+      const t = B.tokens(s.tokens);
+      return '<a class="row" data-row href="#/tasks/' + e(s.taskId) + '">' +
+        '<span class="c-st">' + st(s.status) + "</span>" +
+        '<span class="c-id">' + e(s.taskId) + "</span>" +
+        '<span class="c-goal" title="' + e(s.goal) + '">' + e(s.goal) + "</span>" +
+        '<span class="c-prov">' + e(s.providers.join(" > ") || "none") + "</span>" +
+        '<span class="c-att num">' + s.attempts + "<span class=\"muted\"> att</span></span>" +
+        '<span class="c-dur num">' + B.ms(s.durationMs) + "</span>" +
+        '<span class="c-tok num" title="' + t.input + " in / " + t.output + ' out">' + t.total + " tok</span>" +
+        '<span class="c-date num muted">' + B.date(s.startedAt) + "</span></a>";
+    }).join("");
+    return '<p class="sum">' + items.length + " of " + counts.all + " tasks. Keys: <span class=\"kbd\">j</span>/<span class=\"kbd\">k</span> move, <span class=\"kbd\">Enter</span> open, <span class=\"kbd\">Esc</span> back.</p>" +
+      '<div class="filters"><div class="group" role="group" aria-label="Filter by status"><b>status</b>' + statusChips + "</div>" +
+      '<div class="group" role="group" aria-label="Filter by provider"><b>provider</b>' + provChips + "</div></div>" +
+      '<div class="table"><div class="row head" aria-hidden="true"><span>Status</span><span>Task</span><span>Goal</span><span>Providers</span><span class="num">Att</span><span class="num">Time</span><span class="num">Tokens</span><span class="num">Date</span></div>' +
+      (rows || '<div class="empty">No tasks match these filters.</div>') + "</div>";
+  };
+
+  const attemptCard = (a) => {
+    const ok = a.status === "completed";
+    const v = a.verify;
+    return '<article class="att"><header><b>#' + a.n + "</b><span>" + e(a.provider) + " / " + e(a.model) + '</span><span class="tag ' + (a.reason === "initial" ? "interrupted" : a.reason === "retry" ? "needs_review" : "unreadable") + '">' + a.reason + "</span>" +
+      '<span class="st ' + (ok ? "passed" : "failed") + '"><i aria-hidden="true">' + (ok ? "✓" : "✕") + "</i>exit: " + e(a.exitReason) + "</span></header>" +
+      '<div class="body"><div class="kv"><span>time <b>' + B.ms(a.durationMs) + "</b></span><span>in <b>" + B.num(a.input) + "</b></span><span>out <b>" + B.num(a.output) + "</b></span><span>tools <b>" + a.tools.length + "</b></span></div>" +
+      (v ? '<div style="margin-top:6px"><span class="st ' + (v.passed ? "passed" : "failed") + '"><i aria-hidden="true">' + (v.passed ? "✓" : "✕") + "</i>verify " + (v.passed ? "passed" : "failed") + '</span> <span class="muted">exit ' + v.exitCode + " · " + B.ms(v.durationMs) + " · $ " + e(v.command) + "</span>" +
+        "<pre>" + (v.outputTail ? e(v.outputTail) : '<span class="muted">(no output)</span>') + "</pre></div>" : '<div class="muted" style="margin-top:6px">verify not run</div>') + "</div></article>";
+  };
+
+  const detail = (task) => {
+    const s = task.summary;
+    const ev = task.events;
+    if (s.status === "unreadable") {
+      return '<div class="crumbs"><a href="#/">&larr; tasks</a></div><div class="head1"><h1>' + e(s.taskId) + "</h1>" + tag(s.status) + '</div><p class="goal">This log could not be read: ' + e(s.reason) + "</p>";
+    }
+    const start = ev[0].ts;
+    const atts = B.attemptsOf(ev);
+    const setup = B.setupOf(ev);
+    const rev = B.reviewOf(ev);
+    const fin = B.finishOf(ev);
+    const t = B.tokens(s.tokens);
+    const log = ev.map((x) => {
+      const d = B.describe(x, start);
+      const icon = { ok: "✓", bad: "✕", warn: "!", info: "▸", mute: "·" }[d.tone];
+      return '<li class="' + d.tone + '"><span class="t">' + e(d.at) + '</span><span class="i" aria-hidden="true">' + icon + '</span><span class="k">' + e(d.label) + '</span><span class="x">' + e(d.text) + "</span></li>";
+    }).join("");
+    const issues = rev ? rev.result.issues.map((i) =>
+      '<div class="issue"><span class="tag ' + (i.severity === "blocker" || i.severity === "major" ? "failed" : i.severity === "minor" ? "needs_review" : "interrupted") + '">' + i.severity + '</span><span>' + e(i.message) + '<div class="loc">' + e(i.file) + (i.line ? ":" + i.line : "") + "</div></span></div>").join("") : "";
+    const review = rev ? '<div class="box"><div class="pad"><span class="st ' + (rev.result.verdict === "approve" ? "passed" : "needs_review") + '"><i aria-hidden="true">' + (rev.result.verdict === "approve" ? "✓" : "!") + "</i>" + e(rev.result.verdict.replace("_", " ")) + '</span> <span class="muted">by ' + e(rev.provider) + " / " + e(rev.model) + "</span><p>" + e(rev.result.summary) + "</p></div>" +
+      (issues || '<div class="pad muted" style="border-top:1px solid var(--line2)">No issues reported.</div>') + "</div>" : '<div class="box"><div class="pad muted">No review in this log.</div></div>';
+    return '<div class="crumbs"><a href="#/">&larr; tasks</a> <span class="kbd">Esc</span></div>' +
+      '<div class="head1"><h1>' + e(s.taskId) + "</h1>" + tag(s.status) + "</div>" +
+      '<p class="goal">' + e(s.goal) + "</p>" +
+      '<dl class="meta"><div><dt>Started</dt><dd>' + B.dateTime(s.startedAt) + "</dd></div><div><dt>Duration</dt><dd>" + B.ms(s.durationMs) + "</dd></div><div><dt>Attempts</dt><dd>" + s.attempts + "</dd></div><div><dt>Providers</dt><dd>" + e(s.providers.join(" > ") || "none") + "</dd></div><div><dt>Tokens in/out</dt><dd>" + t.input + " / " + t.output + "</dd></div><div><dt>Branch</dt><dd>" + e(s.branch) + "</dd></div>" +
+      (fin ? "<div><dt>Diff</dt><dd>" + fin.diffStat.files + " files +" + fin.diffStat.additions + " −" + fin.diffStat.deletions + "</dd></div>" : "") + "</dl>" +
+      '<div class="cols"><section><h2>Event log (' + ev.length + ")</h2><ol class=\"log\">" + log + "</ol></section><section>" +
+      "<h2>Attempts (" + atts.length + ")</h2>" +
+      (setup && !setup.passed ? '<div class="box"><div class="pad"><span class="st failed"><i aria-hidden="true">✕</i>setup failed</span> exit ' + setup.exitCode + "<pre>" + e(setup.outputTail ?? "") + "</pre></div></div>" : "") +
+      atts.map(attemptCard).join("") +
+      "<h2>Review</h2>" + review + "<h2>Diff</h2>" +
+      '<div class="placeholder">diff viewer goes here<br><span class="muted">GET /api/tasks/' + e(s.taskId) + "/diff</span></div></section></div>";
+  };
+
+  const scorecard = (sc) => {
+    const impl = sc.implementers.map((r) => "<tr><td>" + e(r.provider) + " / " + e(r.model) + "</td><td>" + r.tasks + "</td><td>" + r.passed + "</td><td>" + B.pct(r.firstTryPassRate) + "</td><td>" + B.dec(r.meanRetries) + "</td><td>" + B.ms(r.meanDurationMs) + "</td><td>" + B.num(r.inputTokens) + "</td><td>" + B.num(r.outputTokens) + "</td></tr>").join("");
+    const rev = sc.reviewers.map((r) => "<tr><td>" + e(r.provider) + " / " + e(r.model) + "</td><td>" + r.reviews + "</td><td>" + r.blocker + "</td><td>" + r.major + "</td><td>" + r.minor + "</td><td>" + r.nit + "</td></tr>").join("");
+    return '<div class="crumbs"><a href="#/">&larr; tasks</a> <span class="kbd">Esc</span></div><h1>Scorecard</h1><p class="sum">Finished tasks only. Excluded: ' + sc.excluded.interrupted + " interrupted, " + sc.excluded.unreadable + " unreadable.</p>" +
+      "<h2>Implementers</h2><div class=\"scroll\"><table class=\"sc\"><thead><tr><th>provider / model</th><th>tasks</th><th>passed</th><th>1st-try</th><th>retries</th><th>mean time</th><th>in tok</th><th>out tok</th></tr></thead><tbody>" + impl + "</tbody></table></div>" +
+      "<h2>Reviewers</h2><div class=\"scroll\"><table class=\"sc\"><thead><tr><th>provider / model</th><th>reviews</th><th>blocker</th><th>major</th><th>minor</th><th>nit</th></tr></thead><tbody>" + rev + "</tbody></table></div>" +
+      '<p class="foot">1st-try = passed with exactly one attempt. retries = mean retry attempts per task. A sample this small shows layout, not model quality.</p>';
+  };
+
+  const missing = (id) => '<div class="crumbs"><a href="#/">&larr; tasks</a></div><p>No task with id ' + e(id) + ".</p>";
+  B.start({ list, detail, scorecard, missing });
+})();
+</script>
+</body>
+</html>
