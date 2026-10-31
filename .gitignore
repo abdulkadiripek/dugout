@@ -7,3 +7,5 @@ node_modules/
 data/
 CLAUDE.local.md
 .claude/settings.local.json
+dist/
+*.tsbuildinfo

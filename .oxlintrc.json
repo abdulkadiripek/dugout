@@ -1,0 +1,29 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "overrides": [
+    {
+      "files": ["packages/core/**"],
+      "rules": {
+        "no-restricted-imports": ["error", { "patterns": [
+          { "group": ["@panosu/*"], "message": "core must not import other packages" }
+        ] }]
+      }
+    },
+    {
+      "files": ["packages/web/**"],
+      "rules": {
+        "no-restricted-imports": ["error", { "patterns": [
+          { "group": ["@panosu/server", "@panosu/cli"], "message": "web talks to server over HTTP only" }
+        ] }]
+      }
+    },
+    {
+      "files": ["packages/server/**", "packages/cli/**"],
+      "rules": {
+        "no-restricted-imports": ["error", { "patterns": [
+          { "group": ["@panosu/web"], "message": "no imports across packages except @panosu/core" }
+        ] }]
+      }
+    }
+  ]
+}
