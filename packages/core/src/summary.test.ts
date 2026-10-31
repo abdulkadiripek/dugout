@@ -9,7 +9,7 @@ const dump = (events: unknown[]) => events.map((event) => JSON.stringify(event))
 
 const expectedStatus: Record<string, string> = {
   "success": "passed", "retry": "passed", "fallback": "passed", "review-issues": "needs_review",
-  "failed": "failed", "all-failed": "failed", "setup-failed": "failed", "real-codex-claude": "passed", "real-fallback-dogfood": "failed",
+  "failed": "failed", "all-failed": "failed", "setup-failed": "failed", "real-codex-claude": "passed", "real-fallback-dogfood": "failed", "real-review-unavailable": "needs_review",
 };
 
 it("covers every fixture file and its expected status", () => {

@@ -35,16 +35,16 @@ Process spawning happens only inside provider adapters and the verify runner, ne
 
 ## Key decisions
 
-See `docs/adr/`: TypeScript monorepo (0001), CLI delegation (0002), own event format (0003), Opus → Codex → Sonnet (0004), retrospective first (0005), worktree per task (0006).
+See `docs/adr/`: TypeScript monorepo (0001), CLI delegation (0002), own event format (0003), Opus → Codex → Sonnet (0004), retrospective first (0005), worktree per task (0006), lint tool (0007), review embeds the diff and observed failures only (0008), board UI (0009).
 
 ## Stages
 
-1. Scaffold + core with `fake` provider (no model calls). Plan: `docs/plans/stage-1.md`.
-2. CLI: delegate, worktree, verify loop, event writing, end-to-end with `fake`. Plan: `docs/plans/stage-2.md`.
-3. Real adapters (Claude, Codex) after one cheap observed call each; cross-review; eval harness.
-4. Board v1: task list, detail, diff, scorecard, `pnpm demo`.
-5. Orchestrator integration: instructions for Opus to delegate via task packages; dogfood on this repo.
-6. Portfolio polish: README, screenshots, secret scan, license, public remote.
+1. Scaffold + core with `fake` provider. Done.
+2. CLI: delegate, worktree, verify loop, event writing, end-to-end with `fake`. Done.
+3. Real adapters (Claude, Codex), cross-review, `panosu eval` with five runnable golden tasks. Done (real rate-limit and review-unavailable paths observed live).
+4. Board: read-only API, scorecard math, React UI, `pnpm demo`. Done.
+5. Orchestrator integration: `docs/orchestrator-guide.md`, dogfood on this repo. Two real runs done; a successful Codex-first run with a live cross-review awaits Codex quota.
+6. Portfolio polish: README and screenshots done, secret scan in CI done. Open and owned by the maintainer: license, repository name, public remote, git history cleanup (`docs/release-checklist.md`).
 7. Later: live streaming (SSE), controls (stop/retry/approve), MCP wrapper, Beyin receipts.
 
 ## Storage
