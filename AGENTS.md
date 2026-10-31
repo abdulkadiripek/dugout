@@ -34,7 +34,7 @@ Runtime: Node + pnpm (installed). `tmux` and `bun` are not installed and not req
 packages/core    # schemas (zod), adapter interface, fallback, verify loop. Depends on nothing else here.
 packages/cli     # `panosu` command. Depends on core.
 packages/server  # Hono API, read-only. Depends on core.
-packages/web     # React + Vite UI. Talks to server over HTTP only; never imports server or cli.
+packages/web     # React + Vite UI. Talks to server over HTTP only; never imports server or cli. May `import type` from core.
 ```
 
 - `core` has no I/O side effects at import time and does not spawn processes directly; spawning lives behind the adapter interface.

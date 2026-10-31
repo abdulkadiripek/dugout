@@ -29,7 +29,7 @@ The orchestrator receives only: final `status`, attempts, providers used, review
 | `packages/core` | zod schemas (event, task package, review), adapter interface, fallback chain, verify/retry loop, scorecard math | nothing in the repo |
 | `packages/cli` | `panosu delegate`, `panosu list`, worktree handling, log writing | core |
 | `packages/server` | read-only Hono API over the event logs and git | core |
-| `packages/web` | React + Vite UI | server over HTTP only |
+| `packages/web` | React + Vite UI | server over HTTP only; `import type` from core is allowed (types only, no runtime import) |
 
 Process spawning happens only inside provider adapters and the verify runner, never in `core` import paths.
 
