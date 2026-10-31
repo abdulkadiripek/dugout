@@ -51,7 +51,10 @@ Type-specific fields are flat next to the envelope.
 - A retry is triggered by a failed `verify`, or by an attempt that ended `timeout` or `invalid_output`. The failed verify's `outputTail` (or the exit reason) is fed back to the same provider.
 - `rate_limit`, `auth`, `crash` never consume retries; they trigger fallback to the next provider in `package.providers`.
 - When a provider's retry budget is exhausted while `verify` still fails, the task ends `failed`. Failing tests are not a provider outage, so there is no fallback in this case.
-- When no provider is left after fallbacks, the task ends `failed`.
+- The same holds when the budget is exhausted on `timeout` or `invalid_output`: the task ends `failed`, no fallback.
+- When no provider is left after fallbacks, the task ends `failed`. In that case no `fallback.triggered` is written for the missing provider (see `all-failed.jsonl`).
+- A fallback attempt gets the original prompt, without feedback from the previous provider's attempts.
+- `runTask` in `core` emits `worktree.created` itself, from the `worktree` dependency it is given (the caller creates the worktree). `diffStat` and model names also come in as dependencies; `core` never runs git or reads config.
 - Examples: `retry.jsonl` (retry then pass), `failed.jsonl` (budget exhausted), `all-failed.jsonl` (no provider left).
 
 ## Reviewer selection
