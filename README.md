@@ -54,7 +54,7 @@ node packages/cli/dist/bin.js list --events-dir /tmp/dugout-events
 pnpm serve
 ```
 
-Real runs (`dugout delegate` without `--scenario`) spend subscription quota. Start with a tiny task and the default models.
+Real runs (`dugout delegate` without `--scenario`) spend subscription quota. Start with a tiny task and the default models. A step-by-step walkthrough (writing a task package, running it, reading the result, the board, using it from Claude Code) is in [`docs/getting-started.md`](docs/getting-started.md).
 
 ## Configuration
 
