@@ -1,10 +1,15 @@
-# Release checklist (maintainer decisions)
+# Release checklist
 
-Nothing here has been done automatically. The tool never pushes, never rewrites history and never picks a license.
+Done on 2026-10-31:
 
-1. **License and name.** Pick a license (MIT is the suggestion) and the public repository name; add `LICENSE` and the license line in `README.md`.
-2. **History.** The first commits of this repository contain personal context (see `git log --stat` for the earliest commits). Before the first public push either create a fresh history (`git checkout --orphan public && git add -A && git commit -m "Initial public version"` on a clean tree, then use that branch) or rewrite the early commits; review `git log -p` for personal paths and emails with `node scripts/scan-repo.mjs` plus a manual look at the first commits. `scripts/scan-repo.mjs` only checks the current tree.
-3. **Local-only files.** Confirm `git check-ignore CLAUDE.local.md .proje` prints both, and `git ls-files | grep -E "^(\.proje|CLAUDE\.local)"` prints nothing.
-4. **CI.** `.github/workflows/ci.yml` has never run on GitHub. After the first push, check the run (lint, typecheck, test, build, repo scan). Node 24 in CI (the golden evals need Node 24).
-5. **Remote.** `git remote add origin <url>` and push only after the steps above. Adding a remote and pushing is an outward-facing action.
-6. **Quota-dependent checks (optional).** When Codex quota is available, run one small real task through `dugout delegate` with both providers to see a successful Codex-first run and a live approve review, and `dugout eval 01 --providers codex,claude` to see the golden task flow with a real model.
+- [x] Name: Dugout (ADR 0010); name search found no AI-agent product with this name.
+- [x] License: MIT (`LICENSE`).
+- [x] History: personal context in the first commits and the two personal author e-mails were removed while keeping all commits (rewritten with `git filter-branch`: early `CLAUDE.md`, `README.md` and `.claude/settings.json` versions replaced, authors mapped to the GitHub noreply address). Every commit tree, message and author line was scanned before publishing.
+- [x] Public repository: https://github.com/abdulkadiripek/dugout (MIT, topics set, private vulnerability reporting on).
+- [x] CI: first run on GitHub found four environment-only failures (a fixture test that depended on the home directory, an `ESRCH` case in a process test, and the golden evals needing Node 24); fixed, now green on Node 24.
+
+Still open:
+
+1. **Live check with Codex quota.** Run one small real task through `dugout delegate` with both providers to see a successful Codex-first run and a live `approve` review, and `dugout eval 01 --providers codex,claude` to see a golden task with a real model.
+2. **Keep the dev history clean.** The pre-publication history only exists in a local branch (`backup/pre-public`); never push it. Delete it when you no longer need it (`git branch -D backup/pre-public`).
+3. **Optional polish:** a social preview image for the repository (Settings, General), a short demo recording of `pnpm demo`, pinned repository on the profile.
