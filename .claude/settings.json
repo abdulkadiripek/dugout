@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(~/.codex/auth*)",
+      "Read(~/.claude/.credentials*)"
+    ],
+    "ask": [
+      "Bash(claude -p*)",
+      "Bash(claude --print*)",
+      "Bash(codex *)",
+      "Bash(pkill*)",
+      "Bash(killall*)",
+      "Bash(git push*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/hooks/typecheck.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+.proje
+.env
+.env.*
+node_modules/
+.worktrees/
+*.log
+data/
