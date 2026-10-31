@@ -1,9 +1,9 @@
 import { execFile } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { appendFileSync, readFileSync, realpathSync } from "node:fs";
+import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, rmdirSync } from "node:fs";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { promisify } from "node:util";
-import { createFakeScenario, parseTaskPackage, runTask, type Event, type ProviderAdapter, type ProviderName, type TaskPackage } from "@panosu/core";
+import { createFakeScenario, parseTaskPackage, runTask, type Event, type ProviderAdapter, type ProviderName, type TaskPackage, type VerifyOutcome } from "@panosu/core";
 import type { IO, Deps } from "./cli.js";
 import type { Config } from "./config.js";
 import { createEventWriter } from "./event-writer.js";
@@ -12,7 +12,7 @@ import { scenarioSpec } from "./scenarios.js";
 import { runVerifyCommand } from "./verify-runner.js";
 import { commitAll, createWorktree, currentBase, diffStat, findRepoRoot, stageAll } from "./worktree.js";
 
-interface Options { file: string; eventsDir: string; repo: string | undefined; providers: string | undefined; scenario: string | undefined }
+interface Options { file: string; eventsDir: string; repo: string | undefined; providers: string | undefined; scenario: string | undefined; overlay?: string }
 const exec = promisify(execFile);
 
 async function excludeWorktrees(repo: string): Promise<void> {
@@ -23,6 +23,36 @@ async function excludeWorktrees(repo: string): Promise<void> {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
   }
   if (!text.split(/\r?\n/).includes(".worktrees/")) appendFileSync(path, `${text.endsWith("\n") || !text ? "" : "\n"}.worktrees/\n`);
+}
+
+function listFiles(dir: string, prefix = ""): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
+    entry.isDirectory() ? listFiles(resolve(dir, entry.name), `${prefix}${entry.name}/`) : [`${prefix}${entry.name}`]);
+}
+
+async function verifyWithOverlay(overlay: string, cwd: string, run: () => Promise<VerifyOutcome>, io: IO): Promise<VerifyOutcome> {
+  const files = listFiles(overlay);
+  const clash = files.find((file) => existsSync(resolve(cwd, file)));
+  if (clash !== undefined) {
+    const message = `check file would overwrite an existing file: ${clash}`;
+    io.stderr(`${message}\n`);
+    return { passed: false, exitCode: 1, durationMs: 0, outputTail: message };
+  }
+  const dirs = new Set<string>();
+  try {
+    for (const file of files) {
+      const target = resolve(cwd, file);
+      for (let dir = dirname(target); dir !== cwd && !existsSync(dir); dir = dirname(dir)) dirs.add(dir);
+      mkdirSync(dirname(target), { recursive: true });
+      copyFileSync(resolve(overlay, file), target);
+    }
+    return await run();
+  } finally {
+    for (const file of files) rmSync(resolve(cwd, file), { force: true });
+    for (const dir of [...dirs].sort((a, b) => b.length - a.length)) {
+      try { rmdirSync(dir); } catch { /* not empty: the verify command made files there */ }
+    }
+  }
 }
 
 function validatePaths(repo: string, paths: string[]): void {
@@ -115,7 +145,8 @@ export async function delegate(options: Options, io: IO, config: Config, deps: D
         check();
         await stageAll(resolve(repo, path));
         check();
-        const outcome = await runVerifyCommand(resolve(repo, path), command, { timeoutMs: config.verifyTimeoutMs, signal: controller.signal });
+        const run = () => runVerifyCommand(resolve(repo, path), command, { timeoutMs: config.verifyTimeoutMs, signal: controller.signal });
+        const outcome = options.overlay === undefined ? await run() : await verifyWithOverlay(options.overlay, cwd, run, io);
         check();
         await stageAll(cwd);
         return outcome;
