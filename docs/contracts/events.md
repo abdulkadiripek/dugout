@@ -63,7 +63,7 @@ The reviewer is the first provider in `package.providers` that differs from the 
 
 ## Structural equality (for tests)
 
-Two logs are structurally equal when, event by event, `type` and these fields match: `attempt`, `reason`, `provider`, `status`, `exitReason`, `from`, `to`, `passed`, `exitCode`, `verdict`, `attempts`, `providers`. `ts`, `taskId`, `seq` values, durations, token counts, `outputTail` text, paths and review prose are ignored.
+Two logs are structurally equal when, after dropping all `provider.tool`, `provider.message` and `provider.usage` events from both (what a provider did inside an attempt varies; the scripted `fake` cannot reproduce it), the remaining events match event by event on `type` and these fields: `attempt`, `reason`, `provider`, `status`, `exitReason`, `from`, `to`, `passed`, `exitCode`, `verdict`, `attempts`, `providers`. `ts`, `taskId`, `seq` values, durations, token counts, `outputTail` text, paths and review prose are ignored.
 
 ## Privacy
 
