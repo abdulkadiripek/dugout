@@ -12,6 +12,7 @@ Format and fields: `docs/contracts/task-package.md`. Rules of thumb:
 - `acceptance`: each item checkable by a command or a test; if you cannot write one, the task is not ready.
 - `verify`: one command, exit 0 means done. `setup`: only when the worktree needs preparation (for example `pnpm install --offline --frozen-lockfile`).
 - Set `max_retries` (default 2) and `providers` (default `[codex, claude]`; Codex first, Claude as fallback).
+- The frontmatter is YAML. Items that start with a backtick or contain `: ` break it (found while dogfooding). Wrap every list item in double quotes (escape inner quotes), or write them as JSON strings. `panosu delegate` rejects an invalid package with exit 3 before creating anything.
 - Commit the package before running if it lives in the repo: the worktree is created from the committed `baseRef`.
 
 ## Run
