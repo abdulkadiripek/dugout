@@ -4,6 +4,11 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@panosu/core": "workspace:*"
+    "@hono/node-server": "^2.1.5",
+    "@panosu/core": "workspace:*",
+    "hono": "^4.13.14"
+  },
+  "bin": {
+    "panosu-serve": "dist/bin.js"
   }
 }

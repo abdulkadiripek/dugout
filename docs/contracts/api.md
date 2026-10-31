@@ -1,6 +1,6 @@
 # Contract: board API (read-only)
 
-Served by `packages/server` (`panosu serve`), bound to `127.0.0.1` only. The API is derived solely from the event log directory and `git`. It never writes, never reads `~/.claude/**` or `~/.codex/**`, and never spawns anything except `git` for diffs. Payload schemas are zod in `packages/core`.
+Served by `packages/server` (command `panosu-serve [--port 4317] [--events-dir <dir>] [--repo <dir>]`; the `cli` package does not depend on `server`), bound to `127.0.0.1` only. The API is derived solely from the event log directory and `git`. It never writes, never reads `~/.claude/**` or `~/.codex/**`, and never spawns anything except `git` for diffs. Payload schemas are zod in `packages/core`.
 
 ## Routes
 

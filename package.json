@@ -10,7 +10,8 @@
     "lint": "oxlint",
     "typecheck": "tsc -b",
     "test": "vitest run",
-    "build": "tsc -b"
+    "build": "tsc -b",
+    "serve": "node packages/server/dist/bin.js"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

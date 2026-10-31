@@ -17,7 +17,7 @@ Stages 1-3 merged. Fixtures: `fixtures/events/*.jsonl` (including the real `real
 1. **Contract** `docs/contracts/api.md`: routes, JSON shapes (zod in core), errors, limits.
 2. **Core**: `summarizeLog(events)` (status, attempts, providers, duration, tokens, review verdict), `computeScorecard`, schemas for the API payloads; tests against all fixtures.
 3. **Server**: `GET /api/tasks`, `GET /api/tasks/:id` (events + summary), `GET /api/tasks/:id/diff`, `GET /api/scorecard`, `GET /api/health`; path-traversal safe task ids; tests with temp events dirs and a real temp git repo.
-4. **CLI**: `panosu serve` starts it; `pnpm demo` stays a Stage-4b item (needs the UI).
+4. **Entry point**: `panosu-serve` (bin of `packages/server`, plus a root script `pnpm serve`); `cli` does not depend on `server`. `pnpm demo` stays a Stage-4b item (needs the UI).
 5. **Prototypes**: two self-contained static HTML prototypes of the task list, task detail and scorecard built from fixtures (dark/dense and airy/visual), under `docs/design/prototypes/`; no framework. The maintainer picks; `docs/design.md` is then completed.
 
 ## Acceptance
