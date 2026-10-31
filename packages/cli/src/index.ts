@@ -8,3 +8,4 @@ export type { VerifyOutcome } from "@panosu/core";
 export { findRepoRoot, currentBase, createWorktree, removeWorktree, stageAll, diffStat, commitAll } from "./worktree.js";
 export type { Worktree, DiffStat } from "./worktree.js";
 export { main } from "./cli.js";
+export { createCodexAdapter, createClaudeAdapter, spawnReal, type SpawnFn, type SpawnedProcess, type AdapterOptions } from "./providers/index.js";
