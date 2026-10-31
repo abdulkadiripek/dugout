@@ -12,7 +12,8 @@
     "test": "vitest run",
     "build": "tsc -b && pnpm --filter @dugout/web build",
     "serve": "node packages/server/dist/bin.js",
-    "demo": "node scripts/demo.mjs"
+    "demo": "node scripts/demo.mjs",
+    "board": "node scripts/demo.mjs --live --open"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
