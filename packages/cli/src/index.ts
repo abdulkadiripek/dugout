@@ -7,3 +7,4 @@ export type { VerifyOptions } from "./verify-runner.js";
 export type { VerifyOutcome } from "@panosu/core";
 export { findRepoRoot, currentBase, createWorktree, removeWorktree, stageAll, diffStat, commitAll } from "./worktree.js";
 export type { Worktree, DiffStat } from "./worktree.js";
+export { main } from "./cli.js";
