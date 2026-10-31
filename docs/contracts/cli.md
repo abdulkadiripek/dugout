@@ -11,13 +11,13 @@ panosu list [--events-dir <dir>] [--limit <n>]
 
 | Flag | Meaning | Default |
 |---|---|---|
-| `--providers` | Comma list overriding `providers` of the package. In Stage 2 only `fake` is accepted. | the package's list |
+| `--providers` | Comma list overriding `providers` of the package: `codex`, `claude` or `fake`. `fake` cannot be mixed with the others. | the package's list |
 | `--scenario` | Fake mode: every provider of the package is replaced by a scripted `fake` adapter following this scenario: `success`, `fallback`, `review-issues`, `all-failed`. | none |
 | `--events-dir` | Where event logs are written and read. | `~/.ajan-panosu/events` |
 | `--repo` | Repository to create the worktree in. | the git root of the current directory |
 | `--limit` | Number of tasks `list` prints, newest first. | `20` |
 
-Fake mode is on when `--scenario` or `--providers fake` is given (`--providers fake` alone means scenario `success`). Without either, real providers (`codex`, `claude`) are refused with exit code 3 until their adapters exist (Stage 3); the message says so.
+Fake mode is on when `--scenario` or `--providers fake` is given (`--providers fake` alone means scenario `success`). Without either, the package's providers run for real: `codex` and `claude` spawn the official CLIs (commands in `provider-adapter.md`) and spend subscription quota. A package listing `fake` together with another provider, without fake mode, is exit 3.
 
 Scenarios script only the adapters (exit reasons and the review verdict); **`verify` always runs the package's real command** in the worktree. So a retry or a `failed` task comes from a verify command that fails, not from a scenario name. A scenario lists outcomes per provider position and the positions map to the package's provider list in order: `success` = position 0 always `ok`; `fallback` = position 0 `rate_limit`, position 1 `ok`; `all-failed` = position 0 `rate_limit`, position 1 `auth`; `review-issues` = like `success` with the review verdict `changes_requested`. A scenario that needs more positions than the package has providers is exit 3. "Always `ok`" means at least 6 outcomes, enough for any `max_retries`.
 
@@ -26,9 +26,10 @@ Scenarios script only the adapters (exit reasons and the review verdict); **`ver
 1. Read and validate the package with `parseTaskPackage`. On failure: print a readable error naming the field, exit 3, write no log and create no worktree.
 2. `baseRef` = the current branch name of the repo (the commit hash if HEAD is detached). Uncommitted changes in the main working tree are not part of the worktree; say nothing about them.
 3. Task id = `<package id>-<4 hex chars>`. Make sure `.worktrees/` is listed in the repo's `info/exclude` (never touch tracked files or `.gitignore`). Create the worktree `.worktrees/<task-id>` on branch `panosu/<task-id>` from `baseRef`. `worktree.path` in events stays repo-relative; the CLI resolves it against the repo root before giving a `cwd` to adapters or the verify runner.
-4. Call `runTask` (see `events.md`), appending each event to `<events-dir>/<task-id>.jsonl` as it is emitted.
-5. Before every `verify`, stage everything in the worktree (`git add -A`) so the diff against `baseRef` includes new files. `diffStat` is computed from `git diff --cached --numstat <baseRef>`.
-6. After `task.finished`, if anything is staged, commit it on the task branch with a fixed identity (`panosu <panosu@localhost>`) and message `panosu: <task id>`. The worktree is left in place. Merging is never done by the CLI.
+4. If the package has `setup`, `runTask` runs it once in the worktree through the same runner as `verify` (same timeout) before the first attempt; a failing setup ends the task `failed` with zero attempts (see `events.md`).
+5. Call `runTask` (see `events.md`), appending each event to `<events-dir>/<task-id>.jsonl` as it is emitted.
+6. Before every `verify`, stage everything in the worktree (`git add -A`) so the diff against `baseRef` includes new files. `diffStat` is computed from `git diff --cached --numstat <baseRef>`.
+7. After `task.finished`, if anything is staged, commit it on the task branch with a fixed identity (`panosu <panosu@localhost>`) and message `panosu: <task id>`. The worktree is left in place. Merging is never done by the CLI.
 
 ## Verify runner
 
@@ -56,7 +57,7 @@ The `review` counts are present only when a review ran. Any absolute path under 
 | 0 | `passed` |
 | 1 | `needs_review` |
 | 2 | `failed` |
-| 3 | invalid package, bad usage, unsupported provider, or a scenario that runs out of outcomes |
+| 3 | invalid package, bad usage, an invalid provider combination, or a scenario that runs out of outcomes |
 | 130 | interrupted by `SIGINT`/`SIGTERM` |
 
 ## `list`
